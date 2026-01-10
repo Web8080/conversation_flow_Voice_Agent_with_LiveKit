@@ -56,13 +56,36 @@ export async function POST(request: NextRequest) {
         throw new Error(`Failed to dispatch agent: ${response.status} ${errorText}`)
       }
 
-      const result = await response.json()
+      // Handle response - LiveKit API might return "OK" as text or JSON
+      const contentType = response.headers.get('content-type') || ''
+      let result: any = {}
+      
+      if (contentType.includes('application/json')) {
+        result = await response.json()
+      } else {
+        // Response might be "OK" or empty - dispatch succeeded
+        const textResponse = await response.text()
+        console.log('Dispatch API response (text):', textResponse)
+        
+        // If we get "OK" or empty, dispatch was successful
+        if (textResponse.trim() === 'OK' || textResponse.trim() === '') {
+          result = { success: true }
+        } else {
+          // Try to parse as JSON anyway
+          try {
+            result = JSON.parse(textResponse)
+          } catch {
+            result = { message: textResponse }
+          }
+        }
+      }
+      
       console.log('Agent dispatched successfully:', result)
 
       return NextResponse.json({ 
         success: true,
         message: 'Agent dispatched successfully',
-        dispatch_id: result.id || result.dispatch_id
+        dispatch_id: result.id || result.dispatch_id || result.dispatchId
       })
     } catch (error: any) {
       console.error('Agent dispatch error:', error)
