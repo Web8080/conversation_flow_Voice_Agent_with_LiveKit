@@ -115,4 +115,3 @@ done
 4. **Use separate JWT secret** (not LiveKit secret)
 5. **Implement audit logging** for auth events
 6. **Add MFA** for sensitive operations
-7. **Use OAuth2/OIDC** for enterprise SSO

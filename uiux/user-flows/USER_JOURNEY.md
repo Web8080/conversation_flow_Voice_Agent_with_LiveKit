@@ -217,4 +217,3 @@ After 3 attempts: Offer to connect to human agent
 1. High contrast mode option
 2. Text scaling up to 200%
 3. Large touch targets (min 44x44px)
-4. Clear visual indicators for all states

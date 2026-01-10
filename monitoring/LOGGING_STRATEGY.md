@@ -327,4 +327,3 @@ export const logger = {
 - User actions logged (for audit trail)
 - Data access logged (for compliance)
 - Regular log reviews scheduled
-- Log integrity verified (checksums)

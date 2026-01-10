@@ -263,4 +263,3 @@ For full production setup:
 - LiveKit Discord: https://livekit.io/discord
 - OpenAI Support: https://help.openai.com/
 - Ollama GitHub: https://github.com/ollama/ollama
-- Groq Support: https://console.groq.com/docs

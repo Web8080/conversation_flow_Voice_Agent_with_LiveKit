@@ -386,4 +386,3 @@ This demonstrates **senior ML/AI thinking**: Not just building models, but build
 
 - `ML_APPROACH.md`: Comprehensive ML strategy document
 - `backend/agent/services/llm_service.py`: LLM service implementation
-- `backend/agent/state_machine/state_machine.py`: State machine logic

@@ -53,9 +53,25 @@ export default function VoiceAgentUI() {
       })
 
       newRoom.on(RoomEvent.TrackSubscribed, (track: RemoteTrack, publication: any, participant: RemoteParticipant) => {
-        if (track.kind === Track.Kind.Audio && participant.identity === 'agent') {
+        // Log all track subscriptions for debugging
+        console.log('Track subscribed:', {
+          kind: track.kind,
+          participantIdentity: participant.identity,
+          participantName: participant.name,
+          trackName: publication.trackName,
+        })
+        
+        // Check if this is an audio track from the agent
+        const isAgent = 
+          participant.identity === 'agent' ||
+          participant.identity === 'appointment-scheduler' ||
+          participant.name?.toLowerCase().includes('agent') ||
+          participant.name?.toLowerCase().includes('appointment') ||
+          participant.metadata?.toLowerCase().includes('agent')
+        
+        if (track.kind === Track.Kind.Audio && isAgent) {
           track.attach(audioRef.current!)
-          addMessage('agent', 'Agent connected and ready', 'greeting')
+          addMessage('agent', `Agent audio connected (${participant.identity})`, 'greeting')
           setCurrentState('greeting')
         }
       })
@@ -71,8 +87,23 @@ export default function VoiceAgentUI() {
       })
 
       newRoom.on(RoomEvent.ParticipantConnected, (participant: RemoteParticipant) => {
-        if (participant.identity === 'agent') {
-          addMessage('agent', 'Agent joined the room', 'greeting')
+        // Log all participants for debugging
+        console.log('Participant connected:', {
+          identity: participant.identity,
+          name: participant.name,
+          metadata: participant.metadata,
+        })
+        
+        // Check if this is the agent (by identity, name, or metadata)
+        const isAgent = 
+          participant.identity === 'agent' ||
+          participant.identity === 'appointment-scheduler' ||
+          participant.name?.toLowerCase().includes('agent') ||
+          participant.name?.toLowerCase().includes('appointment') ||
+          participant.metadata?.toLowerCase().includes('agent')
+        
+        if (isAgent) {
+          addMessage('agent', `Agent joined the room (${participant.identity})`, 'greeting')
           setCurrentState('greeting')
         } else {
           addMessage('agent', `User ${participant.identity} joined`)
@@ -110,6 +141,12 @@ export default function VoiceAgentUI() {
         await newRoom.localParticipant.setMicrophoneEnabled(true)
       }
 
+      // Track initial participants before dispatch
+      const initialParticipantIds = new Set(
+        Array.from(newRoom.remoteParticipants.keys())
+      )
+      console.log('Initial participants:', Array.from(initialParticipantIds))
+
       setRoom(newRoom)
       setIsConnected(true)
       addMessage('agent', 'Connected to room successfully. Dispatching agent...')
@@ -125,6 +162,28 @@ export default function VoiceAgentUI() {
         const dispatchResult = await dispatchResponse.json()
         if (dispatchResult.success) {
           addMessage('agent', 'Agent dispatch requested. Waiting for agent to join...')
+          
+          // Fallback: Check for new participants after 5 seconds
+          setTimeout(() => {
+            const currentParticipants = Array.from(newRoom.remoteParticipants.keys())
+            const newParticipants = currentParticipants.filter(
+              id => !initialParticipantIds.has(id)
+            )
+            
+            if (newParticipants.length > 0) {
+              console.log('New participants detected after dispatch:', newParticipants)
+              newParticipants.forEach(participantId => {
+                const participant = newRoom.remoteParticipants.get(participantId)
+                if (participant) {
+                  addMessage('agent', `Detected new participant: ${participant.identity} (likely the agent)`, 'greeting')
+                  setCurrentState('greeting')
+                }
+              })
+            } else {
+              console.log('No new participants detected. Current participants:', currentParticipants)
+              addMessage('agent', 'Still waiting for agent to join. Check browser console for details.')
+            }
+          }, 5000)
         } else {
           addMessage('agent', `Agent dispatch failed: ${dispatchResult.error || 'Unknown error'}`)
         }

@@ -206,4 +206,3 @@ Post-mortem: Scheduled for tomorrow
 - [ ] Update runbooks with learnings
 - [ ] Add monitoring for detected issue
 - [ ] Implement preventive measures
-- [ ] Communicate resolution to stakeholders

@@ -216,4 +216,3 @@ python main.py dev
 - [ ] Set up monitoring access
 - [ ] Review incident response runbook
 
-Welcome to the team!

@@ -288,4 +288,3 @@ This demonstrates **senior ML/AI thinking**: Not just building models, but build
 - `ml/cost_tracker.py`: Cost tracking implementation
 - `ml/prediction_logger.py`: Prediction logging implementation
 - `ml/experiments/ab_test.py`: A/B testing implementation
-- `ml/slot_extraction/enhanced_extractor.py`: Enhanced slot extraction

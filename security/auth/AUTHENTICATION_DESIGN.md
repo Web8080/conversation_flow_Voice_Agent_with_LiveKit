@@ -223,4 +223,3 @@ User → Enterprise SSO → OAuth2/OIDC → JWT → Request LiveKit Token → Ba
 3. **OAuth2/OIDC Integration**
 4. **Single Sign-On (SSO)**
 5. **Device Management**
-6. **Session Management Dashboard**

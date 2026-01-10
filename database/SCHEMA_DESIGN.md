@@ -251,4 +251,3 @@ GROUP BY slot_name;
 
 ## Migration Scripts
 
-See `database/migrations/` for versioned migration files.
