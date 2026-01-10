@@ -20,32 +20,34 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // Generate Bearer token for API authentication
-      // LiveKit Twirp API requires Bearer token with admin permissions
+      // For LiveKit Cloud Twirp API, we need to generate a server token
+      // This token is different from room access tokens - it's for API calls
       const at = new AccessToken(apiKey, apiSecret, {
-        identity: apiKey, // Use API key as identity for admin tokens
+        identity: apiKey, // Use API key as identity
         name: 'Agent Dispatch Service',
       })
       
-      // Grant admin permissions (required for agent dispatch)
+      // Grant full admin permissions for server API calls
       at.addGrant({
-        roomAdmin: true, // Admin access needed for agent dispatch
+        roomAdmin: true,
         canPublish: true,
         canSubscribe: true,
         canPublishData: true,
+        canUpdateOwnMetadata: true,
       })
       
+      // Generate Bearer token (synchronous, no await)
       const bearerToken = at.toJwt()
       
       // Use LiveKit Twirp API to dispatch agent
-      // This is the same API that `lk dispatch create` uses
+      // The endpoint URL should match the LiveKit Cloud instance
       const livekitApiUrl = livekitUrl.replace('wss://', 'https://')
       
       const response = await fetch(`${livekitApiUrl}/twirp/livekit.AgentService/CreateAgentDispatch`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${bearerToken}`
+          'Authorization': `Bearer ${bearerToken}`,
         },
         body: JSON.stringify({
           room: room_name,
