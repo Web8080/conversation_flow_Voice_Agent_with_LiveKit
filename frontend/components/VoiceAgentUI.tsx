@@ -112,7 +112,27 @@ export default function VoiceAgentUI() {
 
       setRoom(newRoom)
       setIsConnected(true)
-      addMessage('agent', 'Connected to room successfully. Waiting for agent to join...')
+      addMessage('agent', 'Connected to room successfully. Dispatching agent...')
+      
+      // Dispatch agent after connecting
+      try {
+        const dispatchResponse = await fetch('/api/dispatch-agent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ room_name: roomName }),
+        })
+        
+        const dispatchResult = await dispatchResponse.json()
+        if (dispatchResult.success) {
+          addMessage('agent', 'Agent dispatch requested. Waiting for agent to join...')
+        } else {
+          addMessage('agent', `Agent dispatch failed: ${dispatchResult.error || 'Unknown error'}`)
+        }
+      } catch (error) {
+        console.error('Failed to dispatch agent:', error)
+        addMessage('agent', 'Failed to dispatch agent. Agent may need to be configured in dashboard.')
+      }
+      
       setCurrentState(null)
     } catch (error) {
       console.error('Failed to connect:', error)

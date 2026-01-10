@@ -1,0 +1,8 @@
+[build]
+dockerfile = "Dockerfile"
+
+[project]
+subdomain = "voiceagent007-fnileh5c"
+
+[agent]
+entrypoint = "python main.py dev"
