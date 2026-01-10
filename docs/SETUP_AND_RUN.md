@@ -26,7 +26,7 @@ cd backend
 
 # Create virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
@@ -35,7 +35,7 @@ pip install -r requirements.txt
 cp .env.example .env
 
 # Edit .env with your credentials (see services/SERVICES_SETUP.md)
-nano .env  # or use your preferred editor
+nano .env # or use your preferred editor
 ```
 
 ### 3. Frontend Setup
@@ -50,7 +50,7 @@ npm install
 cp .env.example .env.local
 
 # Edit .env.local with your LiveKit URL
-nano .env.local  # or use your preferred editor
+nano .env.local # or use your preferred editor
 ```
 
 ### 4. Configure Environment Variables
@@ -192,9 +192,9 @@ python optimize_conversation.py
 
 1. Connect GitHub repository to Vercel
 2. Configure environment variables:
-   - `NEXT_PUBLIC_LIVEKIT_URL`
-   - `LIVEKIT_API_KEY` (server-side)
-   - `LIVEKIT_API_SECRET` (server-side)
+ - `NEXT_PUBLIC_LIVEKIT_URL`
+ - `LIVEKIT_API_KEY` (server-side)
+ - `LIVEKIT_API_SECRET` (server-side)
 3. Deploy
 
 See deployment guides in `services/SERVICES_SETUP.md` for more details.
@@ -212,4 +212,3 @@ See deployment guides in `services/SERVICES_SETUP.md` for more details.
 - Check logs: Backend logs appear in terminal, frontend logs in browser console
 - Review documentation: `VOICE_AGENT_DESIGN.md` for architecture
 - Service setup: `services/SERVICES_SETUP.md` for API configuration
-

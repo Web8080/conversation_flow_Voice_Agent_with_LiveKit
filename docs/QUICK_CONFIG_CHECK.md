@@ -1,11 +1,11 @@
 # Quick Configuration Check
 
-## ✅ Currently Configured
+## Currently Configured
 
-- ✅ **LiveKit API Key**: `APIjAbndhXSoyis` (configured in both backend/.env and frontend/.env.local)
-- ✅ **OpenAI API Key**: `sk-proj-wSGpPc...` (configured in backend/.env)
+- **LiveKit API Key**: `APIjAbndhXSoyis` (configured in both backend/.env and frontend/.env.local)
+- **OpenAI API Key**: `sk-proj-wSGpPc...` (configured in backend/.env)
 
-## ⚠️ Still Need to Add
+## Still Need to Add
 
 ### 1. LiveKit WebSocket URL
 **Where to find it:**
@@ -32,7 +32,7 @@
 
 ---
 
-## 🔧 Quick Edit Commands
+## Quick Edit Commands
 
 ### Edit Backend .env
 ```bash
@@ -64,7 +64,7 @@ LIVEKIT_API_SECRET=your-actual-api-secret-here
 
 ---
 
-## ✅ Once All Configured, You Can:
+## Once All Configured, You Can:
 
 ### 1. Test Backend Configuration
 ```bash
@@ -73,10 +73,10 @@ python -c "
 from dotenv import load_dotenv
 import os
 load_dotenv()
-print('✅ LIVEKIT_URL:', os.getenv('LIVEKIT_URL')[:30] + '...' if os.getenv('LIVEKIT_URL') else '❌ Missing')
-print('✅ LIVEKIT_API_KEY:', os.getenv('LIVEKIT_API_KEY')[:15] + '...' if os.getenv('LIVEKIT_API_KEY') else '❌ Missing')
-print('✅ LIVEKIT_API_SECRET:', 'Set' if os.getenv('LIVEKIT_API_SECRET') and os.getenv('LIVEKIT_API_SECRET') != 'your-api-secret-here' else '❌ Missing')
-print('✅ OPENAI_API_KEY:', 'Set' if os.getenv('OPENAI_API_KEY') else '❌ Missing')
+print(' LIVEKIT_URL:', os.getenv('LIVEKIT_URL')[:30] + '...' if os.getenv('LIVEKIT_URL') else ' Missing')
+print(' LIVEKIT_API_KEY:', os.getenv('LIVEKIT_API_KEY')[:15] + '...' if os.getenv('LIVEKIT_API_KEY') else ' Missing')
+print(' LIVEKIT_API_SECRET:', 'Set' if os.getenv('LIVEKIT_API_SECRET') and os.getenv('LIVEKIT_API_SECRET') != 'your-api-secret-here' else ' Missing')
+print(' OPENAI_API_KEY:', 'Set' if os.getenv('OPENAI_API_KEY') else ' Missing')
 "
 ```
 
@@ -84,12 +84,12 @@ print('✅ OPENAI_API_KEY:', 'Set' if os.getenv('OPENAI_API_KEY') else '❌ Miss
 ```bash
 # Terminal 1: Backend
 cd backend
-pip install -r requirements.txt  # First time only
+pip install -r requirements.txt # First time only
 python main.py dev
 
 # Terminal 2: Frontend
 cd frontend
-npm run dev  # If not already running
+npm run dev # If not already running
 ```
 
 ### 3. Test in Browser
@@ -100,24 +100,23 @@ npm run dev  # If not already running
 
 ---
 
-## 🚨 Security Reminder
+## Security Reminder
 
-- ✅ `.env` files are already in `.gitignore` (won't be committed)
-- ⚠️ Never share your API keys publicly
-- ⚠️ Never commit real API keys to Git
-- ✅ API keys are safe to use in development locally
+- `.env` files are already in `.gitignore` (won't be committed)
+- Never share your API keys publicly
+- Never commit real API keys to Git
+- API keys are safe to use in development locally
 
 ---
 
-## 📋 Final Checklist
+## Final Checklist
 
 Before running the system:
 
-- [x] LiveKit API Key added ✅
-- [x] OpenAI API Key added ✅
-- [ ] LiveKit WebSocket URL added ⏳
-- [ ] LiveKit API Secret added ⏳
+- [x] LiveKit API Key added 
+- [x] OpenAI API Key added 
+- [ ] LiveKit WebSocket URL added 
+- [ ] LiveKit API Secret added 
 - [ ] Payment method added to OpenAI account (if using API)
 
-Once all checked, you're ready to run! 🚀
-
+Once all checked, you're ready to run!

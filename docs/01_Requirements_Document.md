@@ -40,12 +40,12 @@ This document outlines the requirements for building a Python-based voice agent 
 
 #### FR1.6: Conversation Loop
 - The agent MUST maintain a continuous conversation loop:
-  1. Listen to user input
-  2. Transcribe to text
-  3. Send to LLM
-  4. Generate speech from response
-  5. Play response audio
-  6. Return to listening state
+ 1. Listen to user input
+ 2. Transcribe to text
+ 3. Send to LLM
+ 4. Generate speech from response
+ 5. Play response audio
+ 6. Return to listening state
 - The agent MUST support conversation termination (explicit exit command)
 
 ### Non-Functional Requirements
@@ -128,10 +128,10 @@ One of the following use cases MUST be implemented:
 
 #### FR2.5: Transition Logic
 - State transitions MUST occur based on:
-  - Slot filling completion (required information gathered)
-  - User confirmation (yes/no responses)
-  - Error conditions (unclear input, invalid data)
-  - Explicit user requests (restart, cancel, skip)
+ - Slot filling completion (required information gathered)
+ - User confirmation (yes/no responses)
+ - Error conditions (unclear input, invalid data)
+ - Explicit user requests (restart, cancel, skip)
 - Transitions MUST be logged for debugging and analysis
 
 #### FR2.6: Error Handling
@@ -282,4 +282,3 @@ One of the following use cases MUST be implemented:
 3. Design explanation document (2-3 paragraphs minimum)
 4. Working demo with conversation flow
 5. Updated README with Stage 2 features
-

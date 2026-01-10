@@ -1,6 +1,6 @@
 # Developer Onboarding Guide
 
-## Welcome! 🎉
+## Welcome! 
 
 This guide will help you get started with the Voice Agent project.
 
@@ -24,9 +24,9 @@ cd Fortell_AI_Product
 ```bash
 cd backend
 python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
-pip install -r requirements-dev.txt  # Dev dependencies
+pip install -r requirements-dev.txt # Dev dependencies
 ```
 
 ### 3. Frontend Setup
@@ -79,19 +79,19 @@ npm run dev
 
 ```
 Fortell_AI_Product/
-├── backend/              # Python backend
-│   ├── agent/           # Core agent logic
-│   ├── config/          # Configuration
-│   ├── auth/            # Authentication
-│   └── tests/           # Tests
-├── frontend/            # Next.js frontend
-│   ├── app/             # Next.js app directory
-│   ├── components/      # React components
-│   └── tests/           # Frontend tests
-├── testing/             # Test documentation
-├── ci-cd/               # CI/CD workflows
-├── docs/                # Documentation
-└── scripts/             # Utility scripts
+ backend/ # Python backend
+ agent/ # Core agent logic
+ config/ # Configuration
+ auth/ # Authentication
+ tests/ # Tests
+ frontend/ # Next.js frontend
+ app/ # Next.js app directory
+ components/ # React components
+ tests/ # Frontend tests
+ testing/ # Test documentation
+ ci-cd/ # CI/CD workflows
+ docs/ # Documentation
+ scripts/ # Utility scripts
 ```
 
 ## Key Technologies
@@ -116,37 +116,37 @@ Fortell_AI_Product/
 ### Making Changes
 
 1. **Create Branch**
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
+ ```bash
+ git checkout -b feature/your-feature-name
+ ```
 
 2. **Make Changes**
-   - Write code
-   - Write tests
-   - Update documentation
+ - Write code
+ - Write tests
+ - Update documentation
 
 3. **Test Locally**
-   ```bash
-   # Run tests
-   pytest backend/tests/
-   npm test -- frontend
-   
-   # Run linters
-   black backend/
-   npm run lint -- frontend
-   ```
+ ```bash
+ # Run tests
+ pytest backend/tests/
+ npm test -- frontend
+
+ # Run linters
+ black backend/
+ npm run lint -- frontend
+ ```
 
 4. **Commit**
-   ```bash
-   git commit -m "feat: your feature description"
-   ```
-   Pre-commit hooks will run automatically
+ ```bash
+ git commit -m "feat: your feature description"
+ ```
+ Pre-commit hooks will run automatically
 
 5. **Push & Create PR**
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-   Create pull request on GitHub
+ ```bash
+ git push origin feature/your-feature-name
+ ```
+ Create pull request on GitHub
 
 ### Code Review Process
 
@@ -216,5 +216,4 @@ python main.py dev
 - [ ] Set up monitoring access
 - [ ] Review incident response runbook
 
-Welcome to the team! 🚀
-
+Welcome to the team!

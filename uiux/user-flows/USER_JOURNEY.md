@@ -7,13 +7,13 @@
 
 ```
 [Landing Page]
-    ↓
+ ↓
 User clicks "Start Conversation"
-    ↓
+ ↓
 [Connection Screen]
-    ↓
+ ↓
 User enters room name (or uses default)
-    ↓
+ ↓
 Clicks "Connect"
 ```
 
@@ -31,13 +31,13 @@ Clicks "Connect"
 
 ```
 [Connecting State]
-    ↓
+ ↓
 Browser asks for microphone permission
-    ↓
+ ↓
 User allows/denies
-    ↓
+ ↓
 [Connected State]
-    ↓
+ ↓
 Agent joins room
 ```
 
@@ -57,15 +57,15 @@ Agent joins room
 
 ```
 [Agent Greeting]
-    ↓
+ ↓
 User listens to agent introduction
-    ↓
+ ↓
 Agent asks for name
-    ↓
+ ↓
 User speaks name
-    ↓
+ ↓
 [Visual Feedback: "Listening..."]
-    ↓
+ ↓
 Agent confirms name and asks for date
 ```
 
@@ -85,13 +85,13 @@ Agent confirms name and asks for date
 
 ```
 [Date Collection]
-    ↓
+ ↓
 User provides date
-    ↓
+ ↓
 Agent confirms date, asks for time
-    ↓
+ ↓
 User provides time
-    ↓
+ ↓
 Agent confirms time
 ```
 
@@ -111,11 +111,11 @@ Agent confirms time
 
 ```
 [Confirmation State]
-    ↓
+ ↓
 Agent summarizes: "John, appointment on Jan 15 at 2PM?"
-    ↓
+ ↓
 User confirms yes/no
-    ↓
+ ↓
 If yes: [Completion]
 If no: [Return to date collection]
 ```
@@ -136,13 +136,13 @@ If no: [Return to date collection]
 
 ```
 [Terminal State]
-    ↓
+ ↓
 Agent confirms appointment
-    ↓
+ ↓
 Provides summary
-    ↓
+ ↓
 Says goodbye
-    ↓
+ ↓
 [End Conversation Button]
 ```
 
@@ -162,40 +162,40 @@ Says goodbye
 ### Scenario 1: Connection Failed
 ```
 [Connection Attempt]
-    ↓
+ ↓
 Error: Connection failed
-    ↓
+ ↓
 [Error Screen with reason]
-    ↓
+ ↓
 Options:
-  - [Retry]
-  - [Check Settings]
-  - [Contact Support]
+ - [Retry]
+ - [Check Settings]
+ - [Contact Support]
 ```
 
 ### Scenario 2: Microphone Not Working
 ```
 [Connection Successful]
-    ↓
+ ↓
 No audio detected
-    ↓
+ ↓
 [Warning Banner]
-    ↓
+ ↓
 "Microphone not detected. Please check your settings."
-    ↓
+ ↓
 [Test Microphone] button
 ```
 
 ### Scenario 3: Agent Doesn't Understand
 ```
 [User provides input]
-    ↓
+ ↓
 Agent: "I didn't catch that. Could you repeat?"
-    ↓
+ ↓
 Visual indicator: "Unclear input, please try again"
-    ↓
+ ↓
 [Retry Count: 1/3]
-    ↓
+ ↓
 After 3 attempts: Offer to connect to human agent
 ```
 
@@ -218,4 +218,3 @@ After 3 attempts: Offer to connect to human agent
 2. Text scaling up to 200%
 3. Large touch targets (min 44x44px)
 4. Clear visual indicators for all states
-

@@ -2,7 +2,7 @@
 
 A production-ready voice agent system with LiveKit, featuring state-machine-based conversation flows, comprehensive security, monitoring, and professional UI/UX design.
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 # 1. Configure services (see services/SERVICES_SETUP.md)
@@ -14,48 +14,49 @@ cp frontend/.env.example frontend/.env.local
 ./launch.sh
 ```
 
-See `QUICKSTART.md` for detailed instructions.
+See `docs/QUICKSTART.md` for detailed instructions.
 
-## 📁 Project Structure
+## Project Structure
 
 ```
-├── backend/              # Python agent (STT/LLM/TTS + State Machine)
-├── frontend/             # Next.js UI (React + LiveKit Client)
-├── uiux/                 # UI/UX Design (Wireframes, Mockups, User Flows)
-├── database/             # Database Schema & Migrations
-├── security/             # DevSecOps (Security Scans, Pentest Checklist)
-├── monitoring/           # Logging Strategy & Observability
-└── services/             # External Services Setup Guide
+ backend/ # Python agent (STT/LLM/TTS + State Machine)
+ frontend/ # Next.js UI (React + LiveKit Client)
+ docs/ # Documentation (all .md files)
+ uiux/ # UI/UX Design (Wireframes, Mockups, User Flows)
+ database/ # Database Schema & Migrations
+ security/ # DevSecOps (Security Scans, Pentest Checklist)
+ monitoring/ # Logging Strategy & Observability
+ services/ # External Services Setup Guide
 ```
 
-## 🎯 Features
+## Features
 
 ### Core Functionality
-- ✅ Real-time voice interaction via LiveKit
-- ✅ Speech-to-Text (OpenAI Whisper)
-- ✅ LLM (Ollama primary + GPT/Groq fallback)
-- ✅ Text-to-Speech (OpenAI TTS)
-- ✅ State machine conversation flow (5+ states)
-- ✅ Appointment scheduling use case
+- [x] Real-time voice interaction via LiveKit
+- [x] Speech-to-Text (OpenAI Whisper)
+- [x] LLM (OpenAI primary + Ollama fallback)
+- [x] Text-to-Speech (OpenAI TTS)
+- [x] State machine conversation flow (5+ states)
+- [x] Appointment scheduling use case
 
 ### Professional Features
-- ✅ **UI/UX Design**: Complete wireframes, mockups, user journey maps
-- ✅ **Database Schema**: PostgreSQL + TimescaleDB with full migrations
-- ✅ **Security**: Automated scanning, pentest checklist, config validation
-- ✅ **Monitoring**: Structured logging, metrics, distributed tracing
-- ✅ **DevSecOps**: Security-first approach with automated checks
+- [x] **UI/UX Design**: Complete wireframes, mockups, user journey maps
+- [x] **Database Schema**: PostgreSQL + TimescaleDB with full migrations
+- [x] **Security**: Automated scanning, pentest checklist, config validation
+- [x] **Monitoring**: Structured logging, metrics, distributed tracing
+- [x] **DevSecOps**: Security-first approach with automated checks
 
-## 📚 Documentation
+## Documentation
 
 ### Getting Started
-- **[QUICKSTART.md](QUICKSTART.md)** - Get running in 5 minutes
-- **[SETUP_AND_RUN.md](SETUP_AND_RUN.md)** - Detailed setup guide
+- **[QUICKSTART.md](docs/QUICKSTART.md)** - Get running in 5 minutes
+- **[SETUP_AND_RUN.md](docs/SETUP_AND_RUN.md)** - Detailed setup guide
 - **[services/SERVICES_SETUP.md](services/SERVICES_SETUP.md)** - Service configuration
 
 ### Design & Architecture
-- **[VOICE_AGENT_DESIGN.md](VOICE_AGENT_DESIGN.md)** - System design (presentation-ready)
-- **[COMPLETE_SYSTEM_OVERVIEW.md](COMPLETE_SYSTEM_OVERVIEW.md)** - Full system overview
-- **[EXECUTIVE_APPROACH.md](EXECUTIVE_APPROACH.md)** - Professional approach narrative
+- **[VOICE_AGENT_DESIGN.md](docs/VOICE_AGENT_DESIGN.md)** - System design (presentation-ready)
+- **[COMPLETE_SYSTEM_OVERVIEW.md](docs/COMPLETE_SYSTEM_OVERVIEW.md)** - Full system overview
+- **[EXECUTIVE_APPROACH.md](docs/EXECUTIVE_APPROACH.md)** - Professional approach narrative
 - **[uiux/](uiux/)** - Complete UI/UX design documentation
 
 ### Implementation Details
@@ -64,9 +65,9 @@ See `QUICKSTART.md` for detailed instructions.
 - **[security/scripts/](security/scripts/)** - Security scanning tools
 
 ### Interview Preparation
-- **[03_Project_Presentation_Thought_Process.md](03_Project_Presentation_Thought_Process.md)** - Presentation narrative
+- **[03_Project_Presentation_Thought_Process.md](docs/03_Project_Presentation_Thought_Process.md)** - Presentation narrative
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 **Backend**
 - Python 3.11+
@@ -86,7 +87,7 @@ See `QUICKSTART.md` for detailed instructions.
 - LiveKit Cloud
 - Vercel (Frontend deployment)
 
-## 🔒 Security
+## Security
 
 ```bash
 # Run security scan
@@ -99,7 +100,7 @@ python security/scripts/security_scan.py
 python security/scripts/config_validator.py
 ```
 
-## 📊 Monitoring
+## Monitoring
 
 - Structured JSON logging
 - Prometheus-compatible metrics
@@ -107,7 +108,7 @@ python security/scripts/config_validator.py
 - Real-time dashboards
 - Automated alerting
 
-## 🎨 UI/UX Design
+## UI/UX Design
 
 Complete design documentation includes:
 - Wireframes for all screens
@@ -118,7 +119,7 @@ Complete design documentation includes:
 
 See `uiux/` directory for full documentation.
 
-## 🗄️ Database
+## Database
 
 PostgreSQL schema with:
 - Conversation tracking
@@ -130,7 +131,7 @@ PostgreSQL schema with:
 
 See `database/SCHEMA_DESIGN.md` for complete schema.
 
-## 📦 Installation
+## Installation
 
 ```bash
 # Backend
@@ -144,7 +145,7 @@ cd frontend
 npm install
 ```
 
-## 🚀 Deployment
+## Deployment
 
 ### Development
 ```bash
@@ -156,23 +157,23 @@ npm install
 - Frontend: Deploy to Vercel
 - Database: Managed PostgreSQL (AWS RDS, etc.)
 
-See `SETUP_AND_RUN.md` for detailed deployment instructions.
+See `docs/SETUP_AND_RUN.md` for detailed deployment instructions.
 
-## ✅ Project Status
+## Project Status
 
-### Core Implementation ✅
+### Core Implementation 
 - [x] Backend implementation complete
 - [x] Frontend implementation complete
 - [x] State machine implementation complete
 - [x] Authentication system implemented
 
-### Design & Documentation ✅
+### Design & Documentation 
 - [x] UI/UX design documentation complete
 - [x] Database schema designed
 - [x] System design documents complete
 - [x] API documentation (OpenAPI spec)
 
-### DevOps & Operations ✅
+### DevOps & Operations 
 - [x] Security scripts implemented
 - [x] Monitoring strategy defined
 - [x] CI/CD pipeline configured
@@ -182,33 +183,33 @@ See `SETUP_AND_RUN.md` for detailed deployment instructions.
 - [x] Incident response runbooks
 - [x] Developer onboarding guide
 
-### Code Quality ✅
+### Code Quality 
 - [x] Pre-commit hooks configured
 - [x] Linting and formatting setup
 - [x] Code quality standards defined
 
 **Status**: Production-ready framework complete. Ready for service configuration, test implementation, and deployment.
 
-**See**: `SDLC_COMPLETE.md` for complete SDLC overview
+**See**: `docs/SDLC_COMPLETE.md` for complete SDLC overview
 
-## 📖 Next Steps
+## Next Steps
 
 1. **Configure Services**: Read `services/SERVICES_SETUP.md`
 2. **Set Environment Variables**: Configure `.env` files
 3. **Run Security Scan**: Execute security scripts
 4. **Test Locally**: Use `./launch.sh`
 5. **Review Design**: Check `uiux/` for UI/UX
-6. **Prepare Presentation**: Review `VOICE_AGENT_DESIGN.md`
+6. **Prepare Presentation**: Review `docs/VOICE_AGENT_DESIGN.md`
 
-## 🤝 Contributing
+## Contributing
 
 This is a technical exercise submission. For questions or improvements, see documentation.
 
-## 📄 License
+## License
 
 This project is a technical exercise implementation.
 
 ---
 
-**Built with** clarity, structure, and correctness in mind.  
+**Built with** clarity, structure, and correctness in mind. 
 **Designed for** production readiness and professional presentation.

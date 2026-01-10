@@ -159,7 +159,7 @@ grep "rate limit" logs/app/*.log
 
 ### Internal Alert (Slack)
 ```
-🚨 [P1] Voice Agent Service Down
+ [P1] Voice Agent Service Down
 Status: Investigating
 Impact: All users affected
 On-call: @engineer-name
@@ -168,7 +168,7 @@ Incident: INC-12345
 
 ### Status Update
 ```
-📊 [P1] Voice Agent Service Down - UPDATE
+ [P1] Voice Agent Service Down - UPDATE
 Status: Mitigated
 Root Cause: OpenAI API outage
 Resolution: Switched to Ollama fallback
@@ -177,7 +177,7 @@ ETA: 5 minutes
 
 ### Resolution
 ```
-✅ [P1] Voice Agent Service Down - RESOLVED
+ [P1] Voice Agent Service Down - RESOLVED
 Duration: 15 minutes
 Root Cause: OpenAI API outage
 Resolution: Switched to Ollama fallback
@@ -207,4 +207,3 @@ Post-mortem: Scheduled for tomorrow
 - [ ] Add monitoring for detected issue
 - [ ] Implement preventive measures
 - [ ] Communicate resolution to stakeholders
-

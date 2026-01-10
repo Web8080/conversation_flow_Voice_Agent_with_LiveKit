@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-This project implements a real-time voice agent using LiveKit.  
+This project implements a real-time voice agent using LiveKit. 
 The agent joins a LiveKit room, listens to user speech, transcribes it, processes it via an LLM, and responds with synthesized speech.
 
 The system is designed in two stages:
@@ -54,10 +54,10 @@ v
 |
 v
 [ Python Voice Agent ]
-|        |        |
-|        |        |
-[STT]   [LLM]   [TTS]
-|        |
+| | |
+| | |
+[STT] [LLM] [TTS]
+| |
 +--------+
 |
 v
@@ -126,28 +126,28 @@ The agent guides the user through scheduling an appointment.
 ### States
 
 1. **GreetingState**
-   - Introduces agent
-   - Explains purpose
+ - Introduces agent
+ - Explains purpose
 
 2. **CollectDateState**
-   - Asks for preferred date
-   - Extracts date entity
+ - Asks for preferred date
+ - Extracts date entity
 
 3. **CollectTimeState**
-   - Asks for preferred time
-   - Extracts time entity
+ - Asks for preferred time
+ - Extracts time entity
 
 4. **ConfirmationState**
-   - Repeats collected info
-   - Asks user to confirm
+ - Repeats collected info
+ - Asks user to confirm
 
 5. **FallbackState**
-   - Handles unclear or invalid input
-   - Prompts user to retry
+ - Handles unclear or invalid input
+ - Prompts user to retry
 
 6. **TerminalState**
-   - Confirms booking
-   - Ends conversation
+ - Confirms booking
+ - Ends conversation
 
 ---
 
@@ -156,11 +156,11 @@ The agent guides the user through scheduling an appointment.
 ```
 Greeting
 ↓
-CollectDate ──┐
-↓           │
-CollectTime    │
-↓           │
-Confirmation ←─┘
+CollectDate 
+↓ 
+CollectTime 
+↓ 
+Confirmation ←
 ↓
 Terminal
 
@@ -172,15 +172,15 @@ Fallback can be entered from any state and returns to the previous state.
 ## 9. State Transition Logic
 
 - Each state defines:
-  - Prompt to the user
-  - Expected input (intent/slots)
-  - Transition conditions
+ - Prompt to the user
+ - Expected input (intent/slots)
+ - Transition conditions
 
 ### Example:
 - Transition from `CollectDateState` → `CollectTimeState`
-  - Condition: valid date extracted
+ - Condition: valid date extracted
 - Transition to `FallbackState`
-  - Condition: low confidence or invalid input
+ - Condition: low confidence or invalid input
 
 ---
 
@@ -313,22 +313,22 @@ Complete logging strategy and monitoring setup in `monitoring/` directory.
 **Multi-layer authentication approach**:
 
 1. **LiveKit Token Authentication** (Primary)
-   - JWT-based tokens for room access
-   - Server-side token generation with validation
-   - Token expiration (1 hour default)
-   - Room name validation and security checks
+ - JWT-based tokens for room access
+ - Server-side token generation with validation
+ - Token expiration (1 hour default)
+ - Room name validation and security checks
 
 2. **API Authentication** (Secondary)
-   - Optional JWT for authenticated users
-   - Anonymous access with rate limiting
-   - Role-based permissions (anonymous, user, admin)
+ - Optional JWT for authenticated users
+ - Anonymous access with rate limiting
+ - Role-based permissions (anonymous, user, admin)
 
 3. **Security Measures**
-   - Rate limiting (60 requests/minute per IP)
-   - Room name validation (alphanumeric, dash, underscore only)
-   - Reserved name blocking
-   - HTTPS enforcement for all token transmission
-   - No secrets in client-side code
+ - Rate limiting (60 requests/minute per IP)
+ - Room name validation (alphanumeric, dash, underscore only)
+ - Reserved name blocking
+ - HTTPS enforcement for all token transmission
+ - No secrets in client-side code
 
 ### Token Generation Flow
 
@@ -347,7 +347,7 @@ Complete authentication design and implementation in `security/auth/AUTHENTICATI
 
 ## 18. Summary
 
-This system prioritizes clarity, correctness, and extensibility.  
+This system prioritizes clarity, correctness, and extensibility. 
 It demonstrates how LLMs can be safely combined with deterministic conversation logic in real-time voice applications.
 
 **Additional Documentation**:
@@ -355,4 +355,3 @@ It demonstrates how LLMs can be safely combined with deterministic conversation 
 - Database Schema: `database/` directory
 - Security & DevSecOps: `security/` directory
 - Monitoring & Logging: `monitoring/` directory
-

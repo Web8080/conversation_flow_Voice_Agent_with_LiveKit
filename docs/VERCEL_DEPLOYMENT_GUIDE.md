@@ -76,27 +76,27 @@
 1. After adding all environment variables, scroll to the bottom
 2. Click **"Deploy"** button
 3. Vercel will:
-   - Clone your repository
-   - Install dependencies (`npm install`)
-   - Build the Next.js app (`npm run build`)
-   - Deploy to a production URL
+ - Clone your repository
+ - Install dependencies (`npm install`)
+ - Build the Next.js app (`npm run build`)
+ - Deploy to a production URL
 
 ### Step 7: Monitor Deployment
 
 1. You'll see a deployment log in real-time
 2. Watch for any build errors
 3. Once complete, you'll see:
-   - ✅ **"Ready"** status
-   - **Deployment URL** (e.g., `https://your-app-name.vercel.app`)
+ - **"Ready"** status
+ - **Deployment URL** (e.g., `https://your-app-name.vercel.app`)
 
 ### Step 8: Test Your Deployment
 
 1. Click on the deployment URL
 2. You should see your Voice Agent UI
 3. Test the connection:
-   - Enter a room name
-   - Click "Connect"
-   - Test microphone input
+ - Enter a room name
+ - Click "Connect"
+ - Test microphone input
 
 ---
 
@@ -141,9 +141,9 @@
 3. Click **"Environment Variables"** (left sidebar)
 4. Add/Edit/Delete variables as needed
 5. **Important**: Click **"Redeploy"** after changing variables
-   - Or go to **"Deployments"** tab
-   - Click **"..."** menu on latest deployment
-   - Select **"Redeploy"**
+ - Or go to **"Deployments"** tab
+ - Click **"..."** menu on latest deployment
+ - Select **"Redeploy"**
 
 ---
 
@@ -189,10 +189,10 @@ If you want a custom domain:
 
 Once Vercel is deployed:
 
-1. ✅ Frontend deployed and accessible
-2. ⏳ Deploy backend agent to LiveKit Cloud
-3. ⏳ Connect frontend to backend agent
-4. ⏳ Test end-to-end
+1. Frontend deployed and accessible
+2. Deploy backend agent to LiveKit Cloud
+3. Connect frontend to backend agent
+4. Test end-to-end
 
 ---
 
@@ -201,4 +201,3 @@ Once Vercel is deployed:
 - **Vercel Docs**: https://vercel.com/docs
 - **Vercel Support**: https://vercel.com/support
 - **LiveKit Docs**: https://docs.livekit.io/
-

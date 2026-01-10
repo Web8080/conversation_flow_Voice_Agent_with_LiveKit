@@ -4,41 +4,41 @@
 
 ```
 Fortell_AI_Product/
-├── backend/                    # Python voice agent
-│   ├── agent/                  # Core agent logic
-│   │   ├── services/          # STT, LLM, TTS services
-│   │   └── state_machine/     # Conversation state machine
-│   ├── config/                # Configuration management
-│   ├── utils/                 # Logging, utilities
-│   ├── scripts/               # Training, optimization scripts
-│   └── main.py                # Entry point
-│
-├── frontend/                   # Next.js UI
-│   ├── app/                   # Next.js app directory
-│   ├── components/            # React components
-│   └── api/                   # API routes
-│
-├── uiux/                      # UI/UX Design Documentation
-│   ├── wireframes/           # Wireframe designs
-│   ├── mockups/              # Component specifications
-│   └── user-flows/           # User journey maps
-│
-├── database/                  # Database Design
-│   ├── SCHEMA_DESIGN.md      # Complete schema documentation
-│   └── migrations/           # Database migration scripts
-│
-├── security/                  # DevSecOps
-│   ├── scripts/              # Security scanning scripts
-│   ├── config/               # Security configuration
-│   └── tests/                # Security test cases
-│
-├── monitoring/                # Observability
-│   └── LOGGING_STRATEGY.md   # Logging and monitoring strategy
-│
-├── services/                  # External Services Setup
-│   └── SERVICES_SETUP.md     # Service configuration guide
-│
-└── Documentation Files...
+ backend/ # Python voice agent
+ agent/ # Core agent logic
+ services/ # STT, LLM, TTS services
+ state_machine/ # Conversation state machine
+ config/ # Configuration management
+ utils/ # Logging, utilities
+ scripts/ # Training, optimization scripts
+ main.py # Entry point
+
+ frontend/ # Next.js UI
+ app/ # Next.js app directory
+ components/ # React components
+ api/ # API routes
+
+ uiux/ # UI/UX Design Documentation
+ wireframes/ # Wireframe designs
+ mockups/ # Component specifications
+ user-flows/ # User journey maps
+
+ database/ # Database Design
+ SCHEMA_DESIGN.md # Complete schema documentation
+ migrations/ # Database migration scripts
+
+ security/ # DevSecOps
+ scripts/ # Security scanning scripts
+ config/ # Security configuration
+ tests/ # Security test cases
+
+ monitoring/ # Observability
+ LOGGING_STRATEGY.md # Logging and monitoring strategy
+
+ services/ # External Services Setup
+ SERVICES_SETUP.md # Service configuration guide
+
+ Documentation Files...
 ```
 
 ## System Components
@@ -83,17 +83,17 @@ Fortell_AI_Product/
 
 ```
 User (Browser)
-    ↓
+ ↓
 [Next.js Frontend]
-    ↓ (WebRTC)
+ ↓ (WebRTC)
 [LiveKit Cloud]
-    ↓ (gRPC)
+ ↓ (gRPC)
 [Python Agent Backend]
-    ↓
+ ↓
 [STT Service] → [LLM Service] → [TTS Service]
-    ↓              ↓                ↓
-[Database]    [State Machine]  [Audio Response]
-    ↓
+ ↓ ↓ ↓
+[Database] [State Machine] [Audio Response]
+ ↓
 [LiveKit] → [User]
 ```
 
@@ -202,20 +202,20 @@ User (Browser)
 
 ## Success Criteria
 
-✅ **Stage 1**: Basic voice agent working
+ **Stage 1**: Basic voice agent working
 - [ ] Connects to LiveKit room
 - [ ] Transcribes speech
 - [ ] Generates LLM response
 - [ ] Synthesizes speech
 - [ ] End-to-end conversation works
 
-✅ **Stage 2**: State machine conversation flow
+ **Stage 2**: State machine conversation flow
 - [ ] All 5+ states implemented
 - [ ] State transitions work correctly
 - [ ] Error handling and retries functional
 - [ ] Appointment scheduling flow complete
 
-✅ **Production Ready**
+ **Production Ready**
 - [ ] Security scan passes
 - [ ] All tests passing
 - [ ] Documentation complete
@@ -232,4 +232,3 @@ User (Browser)
 - **Monitoring**: `monitoring/LOGGING_STRATEGY.md`
 
 This is a **production-ready system** with professional architecture, security, and observability built in from the start.
-

@@ -10,18 +10,18 @@ This directory contains enhancements from a **senior ML/AI scientist perspective
 
 ```
 ml/
-├── ML_APPROACH.md              # Comprehensive ML strategy document
-├── evaluation/
-│   ├── metrics.py              # Metrics collection and tracking
-│   └── __init__.py
-├── cost_tracker.py             # Token usage and cost tracking
-├── prediction_logger.py        # Prediction logging for observability
-├── experiments/
-│   ├── ab_test.py              # A/B testing framework
-│   └── __init__.py
-├── slot_extraction/
-│   └── enhanced_extractor.py   # Hybrid rule-based + LLM slot extraction
-└── README.md                   # This file
+ ML_APPROACH.md # Comprehensive ML strategy document
+ evaluation/
+ metrics.py # Metrics collection and tracking
+ __init__.py
+ cost_tracker.py # Token usage and cost tracking
+ prediction_logger.py # Prediction logging for observability
+ experiments/
+ ab_test.py # A/B testing framework
+ __init__.py
+ slot_extraction/
+ enhanced_extractor.py # Hybrid rule-based + LLM slot extraction
+ README.md # This file
 ```
 
 ---
@@ -46,25 +46,25 @@ conv_metrics = collector.start_conversation("conv-123")
 
 # Record model request
 collector.record_model_request(
-    model_name="llama3.2",
-    provider="ollama",
-    prompt_version="v2.0",
-    latency_ms=450,
-    input_tokens=120,
-    output_tokens=45,
-    cost=0.0,
-    success=True,
-    confidence=0.92
+ model_name="llama3.2",
+ provider="ollama",
+ prompt_version="v2.0",
+ latency_ms=450,
+ input_tokens=120,
+ output_tokens=45,
+ cost=0.0,
+ success=True,
+ confidence=0.92
 )
 
 # End conversation
 collector.end_conversation(
-    conversation_id="conv-123",
-    success=True,
-    task_completed=True,
-    total_turns=5,
-    final_state="terminal",
-    user_satisfaction=4.5
+ conversation_id="conv-123",
+ success=True,
+ task_completed=True,
+ total_turns=5,
+ final_state="terminal",
+ user_satisfaction=4.5
 )
 
 # Get summary
@@ -97,11 +97,11 @@ tracker.start_conversation("conv-123")
 
 # Record token usage
 cost = tracker.record_token_usage(
-    conversation_id="conv-123",
-    provider="openai",
-    model="gpt-4o-mini",
-    input_tokens=150,
-    output_tokens=75
+ conversation_id="conv-123",
+ provider="openai",
+ model="gpt-4o-mini",
+ input_tokens=150,
+ output_tokens=75
 )
 
 # Check budget
@@ -133,33 +133,33 @@ from ml.prediction_logger import get_prediction_logger
 logger = get_prediction_logger()
 
 logger.log_prediction(
-    conversation_id="conv-123",
-    model="llama3.2",
-    provider="ollama",
-    prompt_version="v2.0",
-    user_input="I want to schedule tomorrow at 2pm",
-    state="collect_date",
-    slots={},
-    response="I'd be happy to help...",
-    extracted_slots={"date": "2025-01-11", "time": "14:00"},
-    confidence=0.92,
-    next_state="confirmation",
-    latency_ms=450,
-    input_tokens=120,
-    output_tokens=45,
-    metadata={"experiment": "prompt_v2_vs_v1", "variant": "v2.0"}
+ conversation_id="conv-123",
+ model="llama3.2",
+ provider="ollama",
+ prompt_version="v2.0",
+ user_input="I want to schedule tomorrow at 2pm",
+ state="collect_date",
+ slots={},
+ response="I'd be happy to help...",
+ extracted_slots={"date": "2025-01-11", "time": "14:00"},
+ confidence=0.92,
+ next_state="confirmation",
+ latency_ms=450,
+ input_tokens=120,
+ output_tokens=45,
+ metadata={"experiment": "prompt_v2_vs_v1", "variant": "v2.0"}
 )
 ```
 
 **Log Format:**
 ```json
 {
-  "conversation_id": "conv-123",
-  "timestamp": "2025-01-10T10:30:00",
-  "model": {"name": "llama3.2", "provider": "ollama", "prompt_version": "v2.0"},
-  "input": {"user_text": "...", "state": "collect_date", "slots": {}},
-  "output": {"response": "...", "extracted_slots": {}, "confidence": 0.92, "next_state": "confirmation"},
-  "metadata": {"latency_ms": 450, "tokens": {"input": 120, "output": 45}, "cost": 0.0}
+ "conversation_id": "conv-123",
+ "timestamp": "2025-01-10T10:30:00",
+ "model": {"name": "llama3.2", "provider": "ollama", "prompt_version": "v2.0"},
+ "input": {"user_text": "...", "state": "collect_date", "slots": {}},
+ "output": {"response": "...", "extracted_slots": {}, "confidence": 0.92, "next_state": "confirmation"},
+ "metadata": {"latency_ms": 450, "tokens": {"input": 120, "output": 45}, "cost": 0.0}
 }
 ```
 
@@ -181,12 +181,12 @@ manager = get_ab_test_manager()
 
 # Register experiment
 experiment = manager.register_experiment(
-    experiment_name="prompt_v2_vs_v1",
-    variants=[
-        ExperimentVariant("v1.0", {"prompt_version": "v1.0"}, traffic_percentage=0.5),
-        ExperimentVariant("v2.0", {"prompt_version": "v2.0"}, traffic_percentage=0.5)
-    ],
-    metrics=["success_rate", "avg_turns", "cost_per_conversation"]
+ experiment_name="prompt_v2_vs_v1",
+ variants=[
+ ExperimentVariant("v1.0", {"prompt_version": "v1.0"}, traffic_percentage=0.5),
+ ExperimentVariant("v2.0", {"prompt_version": "v2.0"}, traffic_percentage=0.5)
+ ],
+ metrics=["success_rate", "avg_turns", "cost_per_conversation"]
 )
 
 # Get variant for user
@@ -195,10 +195,10 @@ variant = manager.get_variant_for_user("prompt_v2_vs_v1", "user-123")
 
 # Record metrics
 manager.record_conversation_metric(
-    experiment_name="prompt_v2_vs_v1",
-    variant_name="v2.0",
-    conversation_id="conv-123",
-    metrics={"success_rate": 1.0, "avg_turns": 5, "cost_per_conversation": 0.002}
+ experiment_name="prompt_v2_vs_v1",
+ variant_name="v2.0",
+ conversation_id="conv-123",
+ metrics={"success_rate": 1.0, "avg_turns": 5, "cost_per_conversation": 0.002}
 )
 
 # Get results
@@ -232,9 +232,9 @@ time_slot = extractor.extract_time("I want to schedule tomorrow at 2pm")
 # Extract all slots
 slots = extractor.extract_all_slots("My name is John Doe, schedule tomorrow at 2pm", ["name", "date", "time"])
 # Returns: {
-#   "name": ExtractedSlot(value="John Doe", confidence=0.9, ...),
-#   "date": ExtractedSlot(value="2025-01-11", confidence=0.95, ...),
-#   "time": ExtractedSlot(value="14:00", confidence=0.95, ...)
+# "name": ExtractedSlot(value="John Doe", confidence=0.9, ...),
+# "date": ExtractedSlot(value="2025-01-11", confidence=0.95, ...),
+# "time": ExtractedSlot(value="14:00", confidence=0.95, ...)
 # }
 ```
 
@@ -258,34 +258,34 @@ from ml.cost_tracker import get_cost_tracker
 import time
 
 class OllamaLLMService(LLMService):
-    async def generate_response(self, user_text: str, context: Optional[Dict[str, Any]] = None) -> Optional[str]:
-        start_time = time.time()
-        collector = get_metrics_collector()
-        logger = get_prediction_logger()
-        
-        try:
-            # ... existing LLM call ...
-            latency_ms = (time.time() - start_time) * 1000
-            
-            # Track metrics
-            collector.record_model_request(
-                model_name=self.model,
-                provider="ollama",
-                prompt_version="v2.0",
-                latency_ms=latency_ms,
-                input_tokens=input_tokens,
-                output_tokens=output_tokens,
-                cost=0.0,
-                success=True,
-                confidence=0.92
-            )
-            
-            return text.strip()
-        except Exception as e:
-            # Track failure
-            collector.record_model_request(...success=False)
-            logger.log_error(...)
-            return None
+ async def generate_response(self, user_text: str, context: Optional[Dict[str, Any]] = None) -> Optional[str]:
+ start_time = time.time()
+ collector = get_metrics_collector()
+ logger = get_prediction_logger()
+
+ try:
+ # ... existing LLM call ...
+ latency_ms = (time.time() - start_time) * 1000
+
+ # Track metrics
+ collector.record_model_request(
+ model_name=self.model,
+ provider="ollama",
+ prompt_version="v2.0",
+ latency_ms=latency_ms,
+ input_tokens=input_tokens,
+ output_tokens=output_tokens,
+ cost=0.0,
+ success=True,
+ confidence=0.92
+ )
+
+ return text.strip()
+ except Exception as e:
+ # Track failure
+ collector.record_model_request(...success=False)
+ logger.log_error(...)
+ return None
 ```
 
 ### Step 2: Update State Machine
@@ -296,21 +296,21 @@ Add confidence scoring to slot extraction:
 from ml.slot_extraction.enhanced_extractor import EnhancedSlotExtractor
 
 class CollectDateState(ConversationState):
-    def __init__(self):
-        self.extractor = EnhancedSlotExtractor()
-    
-    async def handle_input(self, user_text: str, context: ConversationContext, llm_service: LLMService) -> StateResponse:
-        # Try rule-based first
-        date_slot = self.extractor.extract_date(user_text)
-        
-        if date_slot and date_slot.confidence > 0.8:
-            context.slots["date"] = date_slot.value
-            # Use LLM for natural response generation
-            response_text = await llm_service.generate_response(...)
-            return StateResponse(next_state="collect_time", response_text=response_text, ...)
-        
-        # Fallback to LLM extraction
-        # ...
+ def __init__(self):
+ self.extractor = EnhancedSlotExtractor()
+
+ async def handle_input(self, user_text: str, context: ConversationContext, llm_service: LLMService) -> StateResponse:
+ # Try rule-based first
+ date_slot = self.extractor.extract_date(user_text)
+
+ if date_slot and date_slot.confidence > 0.8:
+ context.slots["date"] = date_slot.value
+ # Use LLM for natural response generation
+ response_text = await llm_service.generate_response(...)
+ return StateResponse(next_state="collect_time", response_text=response_text, ...)
+
+ # Fallback to LLM extraction
+ # ...
 ```
 
 ### Step 3: Add Experimentation
@@ -387,4 +387,3 @@ This demonstrates **senior ML/AI thinking**: Not just building models, but build
 - `ML_APPROACH.md`: Comprehensive ML strategy document
 - `backend/agent/services/llm_service.py`: LLM service implementation
 - `backend/agent/state_machine/state_machine.py`: State machine logic
-

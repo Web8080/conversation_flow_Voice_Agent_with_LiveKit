@@ -95,4 +95,3 @@ Monitor:
 - Code duplication (< 3%)
 - Test coverage (> 80%)
 - Code churn (track changes)
-

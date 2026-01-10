@@ -44,15 +44,15 @@ This document outlines how a senior ML/AI scientist would approach building and 
 **Gold Standard Dataset:**
 ```python
 {
-  "conversations": [
-    {
-      "user_utterances": ["I want to schedule an appointment", "Tomorrow at 2pm"],
-      "expected_slots": {"date": "2025-01-11", "time": "14:00"},
-      "expected_states": ["greeting", "collect_date", "collect_time", "confirmation"],
-      "ground_truth_response": "Great! I've scheduled your appointment for tomorrow at 2pm. Is that correct?",
-      "conversation_outcome": "success"
-    }
-  ]
+ "conversations": [
+ {
+ "user_utterances": ["I want to schedule an appointment", "Tomorrow at 2pm"],
+ "expected_slots": {"date": "2025-01-11", "time": "14:00"},
+ "expected_states": ["greeting", "collect_date", "collect_time", "confirmation"],
+ "ground_truth_response": "Great! I've scheduled your appointment for tomorrow at 2pm. Is that correct?",
+ "conversation_outcome": "success"
+ }
+ ]
 }
 ```
 
@@ -70,19 +70,19 @@ This document outlines how a senior ML/AI scientist would approach building and 
 
 **Models to Evaluate:**
 1. **Ollama (Local)**: `llama3.2`, `mistral`, `phi-3`
-   - Pros: Free, fast, privacy-preserving
-   - Cons: Lower quality than cloud models
-   - Use Case: Primary for cost-sensitive deployments
+ - Pros: Free, fast, privacy-preserving
+ - Cons: Lower quality than cloud models
+ - Use Case: Primary for cost-sensitive deployments
 
 2. **Groq**: `llama-3.1-70b-versatile`
-   - Pros: Very fast, high quality
-   - Cons: API costs
-   - Use Case: Primary for production quality
+ - Pros: Very fast, high quality
+ - Cons: API costs
+ - Use Case: Primary for production quality
 
 3. **OpenAI**: `gpt-4o-mini`, `gpt-4o`
-   - Pros: Highest quality, reliable
-   - Cons: Highest cost, latency
-   - Use Case: Fallback, critical conversations
+ - Pros: Highest quality, reliable
+ - Cons: Highest cost, latency
+ - Use Case: Fallback, critical conversations
 
 **Evaluation Strategy:**
 - A/B test models with same prompts
@@ -94,10 +94,10 @@ This document outlines how a senior ML/AI scientist would approach building and 
 **Prompt Versioning System:**
 ```python
 PROMPT_VERSIONS = {
-  "v1.0": "Basic appointment scheduling prompt",
-  "v1.1": "Enhanced with few-shot examples",
-  "v2.0": "Added chain-of-thought reasoning",
-  "v2.1": "Optimized for shorter responses"
+ "v1.0": "Basic appointment scheduling prompt",
+ "v1.1": "Enhanced with few-shot examples",
+ "v2.0": "Added chain-of-thought reasoning",
+ "v2.1": "Optimized for shorter responses"
 }
 ```
 
@@ -134,11 +134,11 @@ User says: "{user_input}"
 
 Respond with JSON:
 {
-  "response": "Your natural language response",
-  "extracted_slots": {"date": "2025-01-14", "time": "15:00"},
-  "confidence": 0.95,
-  "next_state": "collect_time",
-  "needs_clarification": false
+ "response": "Your natural language response",
+ "extracted_slots": {"date": "2025-01-14", "time": "15:00"},
+ "confidence": 0.95,
+ "next_state": "collect_time",
+ "needs_clarification": false
 }
 ```
 
@@ -152,25 +152,25 @@ Respond with JSON:
 
 **Improved Approach**: Hybrid system
 1. **Rule-based Pre-processing**: Handle common patterns
-   - Date patterns: "tomorrow", "next week", "Jan 15"
-   - Time patterns: "2pm", "14:00", "afternoon"
-   - Name patterns: Validate against common names DB
+ - Date patterns: "tomorrow", "next week", "Jan 15"
+ - Time patterns: "2pm", "14:00", "afternoon"
+ - Name patterns: Validate against common names DB
 
 2. **LLM-based Extraction**: For ambiguous cases
-   - Use LLM with structured output (JSON)
-   - Confidence scoring per entity
+ - Use LLM with structured output (JSON)
+ - Confidence scoring per entity
 
 3. **Validation Layer**: Post-extraction checks
-   - Date range validation (not in past, within business hours)
-   - Time slot availability check
-   - Format normalization
+ - Date range validation (not in past, within business hours)
+ - Time slot availability check
+ - Format normalization
 
 **Confidence Scoring:**
 ```python
 {
-  "date": {"value": "2025-01-15", "confidence": 0.95, "source": "llm"},
-  "time": {"value": "14:00", "confidence": 0.88, "source": "rules"},
-  "name": {"value": "John Doe", "confidence": 0.72, "source": "llm", "needs_confirmation": true}
+ "date": {"value": "2025-01-15", "confidence": 0.95, "source": "llm"},
+ "time": {"value": "14:00", "confidence": 0.88, "source": "rules"},
+ "name": {"value": "John Doe", "confidence": 0.72, "source": "llm", "needs_confirmation": true}
 }
 ```
 
@@ -198,15 +198,15 @@ Respond with JSON:
 **Token Tracking:**
 ```python
 class TokenTracker:
-    def track_usage(self, provider: str, input_tokens: int, output_tokens: int):
-        cost = self.calculate_cost(provider, input_tokens, output_tokens)
-        self.metrics.record("token_usage", {
-            "provider": provider,
-            "input_tokens": input_tokens,
-            "output_tokens": output_tokens,
-            "cost": cost,
-            "conversation_id": self.conversation_id
-        })
+ def track_usage(self, provider: str, input_tokens: int, output_tokens: int):
+ cost = self.calculate_cost(provider, input_tokens, output_tokens)
+ self.metrics.record("token_usage", {
+ "provider": provider,
+ "input_tokens": input_tokens,
+ "output_tokens": output_tokens,
+ "cost": cost,
+ "conversation_id": self.conversation_id
+ })
 ```
 
 **Cost Calculation:**
@@ -226,11 +226,11 @@ class TokenTracker:
 # Cache common responses (greetings, confirmations)
 CACHE_KEY = f"llm_response:{hash(user_input + state + slots)}"
 
-if cached_response := cache.get(CACHE_KEY):
-    return cached_response
+if cached_response:= cache.get(CACHE_KEY):
+ return cached_response
 
 response = await llm.generate(user_input, context)
-cache.set(CACHE_KEY, response, ttl=3600)  # 1 hour
+cache.set(CACHE_KEY, response, ttl=3600) # 1 hour
 ```
 
 **Cache Hit Rate Target**: 20-30% (greetings, common confirmations)
@@ -252,13 +252,13 @@ cache.set(CACHE_KEY, response, ttl=3600)  # 1 hour
 **Experiment Configuration:**
 ```python
 experiments = {
-    "prompt_v2_vs_v1": {
-        "variant_a": {"prompt_version": "v1.0", "model": "gpt-4o-mini"},
-        "variant_b": {"prompt_version": "v2.0", "model": "gpt-4o-mini"},
-        "traffic_split": 0.5,  # 50/50 split
-        "metrics": ["success_rate", "avg_turns", "cost_per_conversation"],
-        "duration_days": 7
-    }
+ "prompt_v2_vs_v1": {
+ "variant_a": {"prompt_version": "v1.0", "model": "gpt-4o-mini"},
+ "variant_b": {"prompt_version": "v2.0", "model": "gpt-4o-mini"},
+ "traffic_split": 0.5, # 50/50 split
+ "metrics": ["success_rate", "avg_turns", "cost_per_conversation"],
+ "duration_days": 7
+ }
 }
 ```
 
@@ -273,24 +273,24 @@ experiments = {
 **Comparative Evaluation:**
 ```python
 results = {
-    "ollama_llama3.2": {
-        "success_rate": 0.72,
-        "avg_latency_ms": 450,
-        "cost_per_conversation": 0.0,
-        "user_satisfaction": 0.68
-    },
-    "groq_llama70b": {
-        "success_rate": 0.89,
-        "avg_latency_ms": 320,
-        "cost_per_conversation": 0.002,
-        "user_satisfaction": 0.85
-    },
-    "openai_gpt4mini": {
-        "success_rate": 0.94,
-        "avg_latency_ms": 850,
-        "cost_per_conversation": 0.015,
-        "user_satisfaction": 0.91
-    }
+ "ollama_llama3.2": {
+ "success_rate": 0.72,
+ "avg_latency_ms": 450,
+ "cost_per_conversation": 0.0,
+ "user_satisfaction": 0.68
+ },
+ "groq_llama70b": {
+ "success_rate": 0.89,
+ "avg_latency_ms": 320,
+ "cost_per_conversation": 0.002,
+ "user_satisfaction": 0.85
+ },
+ "openai_gpt4mini": {
+ "success_rate": 0.94,
+ "avg_latency_ms": 850,
+ "cost_per_conversation": 0.015,
+ "user_satisfaction": 0.91
+ }
 }
 ```
 
@@ -308,15 +308,15 @@ results = {
 **Model Registry:**
 ```python
 models = {
-    "llm/ollama/llama3.2/v1": {
-        "model_id": "llama3.2",
-        "provider": "ollama",
-        "version": "v1",
-        "prompt_version": "v2.0",
-        "performance": {"accuracy": 0.85, "latency_p95": 600},
-        "deployed_at": "2025-01-10",
-        "status": "production"
-    }
+ "llm/ollama/llama3.2/v1": {
+ "model_id": "llama3.2",
+ "provider": "ollama",
+ "version": "v1",
+ "prompt_version": "v2.0",
+ "performance": {"accuracy": 0.85, "latency_p95": 600},
+ "deployed_at": "2025-01-10",
+ "status": "production"
+ }
 }
 ```
 
@@ -330,22 +330,22 @@ models = {
 **Features to Track:**
 ```python
 features = {
-    "user_features": {
-        "conversation_count": int,  # Historical context
-        "preferred_time_range": str,  # Personalization
-        "average_response_time": float  # Behavioral signal
-    },
-    "context_features": {
-        "current_state": str,
-        "collected_slots": dict,
-        "conversation_length": int,
-        "time_of_day": str
-    },
-    "model_features": {
-        "model_version": str,
-        "prompt_version": str,
-        "temperature": float
-    }
+ "user_features": {
+ "conversation_count": int, # Historical context
+ "preferred_time_range": str, # Personalization
+ "average_response_time": float # Behavioral signal
+ },
+ "context_features": {
+ "current_state": str,
+ "collected_slots": dict,
+ "conversation_length": int,
+ "time_of_day": str
+ },
+ "model_features": {
+ "model_version": str,
+ "prompt_version": str,
+ "temperature": float
+ }
 }
 ```
 
@@ -354,27 +354,27 @@ features = {
 **Prediction Log Schema:**
 ```python
 prediction_log = {
-    "conversation_id": "uuid",
-    "timestamp": "iso8601",
-    "model": "ollama/llama3.2",
-    "prompt_version": "v2.0",
-    "input": {
-        "user_text": "I want to book tomorrow at 2pm",
-        "state": "collect_date",
-        "slots": {}
-    },
-    "output": {
-        "response": "I'd be happy to help...",
-        "extracted_slots": {"date": "2025-01-11", "time": "14:00"},
-        "confidence": 0.92,
-        "next_state": "confirmation"
-    },
-    "metadata": {
-        "latency_ms": 450,
-        "tokens_input": 120,
-        "tokens_output": 45,
-        "cost": 0.0
-    }
+ "conversation_id": "uuid",
+ "timestamp": "iso8601",
+ "model": "ollama/llama3.2",
+ "prompt_version": "v2.0",
+ "input": {
+ "user_text": "I want to book tomorrow at 2pm",
+ "state": "collect_date",
+ "slots": {}
+ },
+ "output": {
+ "response": "I'd be happy to help...",
+ "extracted_slots": {"date": "2025-01-11", "time": "14:00"},
+ "confidence": 0.92,
+ "next_state": "confirmation"
+ },
+ "metadata": {
+ "latency_ms": 450,
+ "tokens_input": 120,
+ "tokens_output": 45,
+ "cost": 0.0
+ }
 }
 ```
 
@@ -409,11 +409,11 @@ prediction_log = {
 **Quality Score:**
 ```python
 quality_score = (
-    0.3 * slot_extraction_accuracy +
-    0.2 * response_relevance +
-    0.2 * confidence_score +
-    0.15 * latency_score +  # Lower is better
-    0.15 * cost_efficiency_score  # Lower is better
+ 0.3 * slot_extraction_accuracy +
+ 0.2 * response_relevance +
+ 0.2 * confidence_score +
+ 0.15 * latency_score + # Lower is better
+ 0.15 * cost_efficiency_score # Lower is better
 )
 ```
 
@@ -427,9 +427,9 @@ quality_score = (
 ```python
 # Instead of waiting for full response, stream tokens
 async for token in llm.stream_response(user_input, context):
-    # Start TTS synthesis early (with partial text)
-    # Reduce perceived latency
-    pass
+ # Start TTS synthesis early (with partial text)
+ # Reduce perceived latency
+ pass
 ```
 
 **Benefits**: 30-50% reduction in perceived latency
@@ -440,8 +440,8 @@ async for token in llm.stream_response(user_input, context):
 ```python
 # If multiple users in same state, batch LLM calls
 batched_requests = [
-    {"user_id": "u1", "input": "tomorrow", "state": "collect_date"},
-    {"user_id": "u2", "input": "next week", "state": "collect_date"}
+ {"user_id": "u1", "input": "tomorrow", "state": "collect_date"},
+ {"user_id": "u2", "input": "next week", "state": "collect_date"}
 ]
 responses = await llm.batch_generate(batched_requests)
 ```
@@ -539,4 +539,3 @@ When presenting this approach:
 6. **"Continuous improvement loop"**: Feedback → analysis → refinement
 
 This demonstrates **senior ML/AI thinking**: Not just building models, but building **systems** that improve over time.
-

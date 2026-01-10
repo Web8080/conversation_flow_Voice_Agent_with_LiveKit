@@ -5,10 +5,10 @@
 ### Log Levels
 
 ```
-DEBUG   - Detailed diagnostic information (development only)
-INFO    - General informational messages (normal operations)
+DEBUG - Detailed diagnostic information (development only)
+INFO - General informational messages (normal operations)
 WARNING - Warning messages (recoverable issues)
-ERROR   - Error messages (non-fatal errors)
+ERROR - Error messages (non-fatal errors)
 CRITICAL - Critical errors (system failures)
 ```
 
@@ -18,21 +18,21 @@ All logs use structured JSON format:
 
 ```json
 {
-  "timestamp": "2025-01-10T10:30:00Z",
-  "level": "INFO",
-  "service": "voice-agent",
-  "component": "stt_service",
-  "session_id": "abc123",
-  "conversation_id": "conv-456",
-  "message": "STT transcription completed",
-  "metadata": {
-    "audio_duration_ms": 2500,
-    "text_length": 45,
-    "language": "en",
-    "latency_ms": 800
-  },
-  "trace_id": "trace-789",
-  "span_id": "span-101"
+ "timestamp": "2025-01-10T10:30:00Z",
+ "level": "INFO",
+ "service": "voice-agent",
+ "component": "stt_service",
+ "session_id": "abc123",
+ "conversation_id": "conv-456",
+ "message": "STT transcription completed",
+ "metadata": {
+ "audio_duration_ms": 2500,
+ "text_length": 45,
+ "language": "en",
+ "latency_ms": 800
+ },
+ "trace_id": "trace-789",
+ "span_id": "span-101"
 }
 ```
 
@@ -47,11 +47,11 @@ All logs use structured JSON format:
 ```python
 # Example logging in code
 logger.info(
-    "user_input_received",
-    session_id=session_id,
-    text_length=len(user_text),
-    state=current_state,
-    metadata={"retry_count": retry_count}
+ "user_input_received",
+ session_id=session_id,
+ text_length=len(user_text),
+ state=current_state,
+ metadata={"retry_count": retry_count}
 )
 ```
 
@@ -71,16 +71,16 @@ logger.info(
 
 ```json
 {
-  "timestamp": "2025-01-10T10:30:00Z",
-  "level": "ERROR",
-  "error_type": "STTServiceError",
-  "error_message": "OpenAI API rate limit exceeded",
-  "stack_trace": "...",
-  "context": {
-    "session_id": "abc123",
-    "retry_count": 3,
-    "api_key_prefix": "sk-abc..."
-  }
+ "timestamp": "2025-01-10T10:30:00Z",
+ "level": "ERROR",
+ "error_type": "STTServiceError",
+ "error_message": "OpenAI API rate limit exceeded",
+ "stack_trace": "...",
+ "context": {
+ "session_id": "abc123",
+ "retry_count": 3,
+ "api_key_prefix": "sk-abc..."
+ }
 }
 ```
 
@@ -98,12 +98,12 @@ logger.info(
 
 ```json
 {
-  "timestamp": "2025-01-10T10:30:00Z",
-  "event_type": "authentication_failure",
-  "ip_address": "192.168.1.100",
-  "user_agent": "Mozilla/5.0...",
-  "reason": "invalid_token",
-  "severity": "medium"
+ "timestamp": "2025-01-10T10:30:00Z",
+ "event_type": "authentication_failure",
+ "ip_address": "192.168.1.100",
+ "user_agent": "Mozilla/5.0...",
+ "reason": "invalid_token",
+ "severity": "medium"
 }
 ```
 
@@ -114,16 +114,16 @@ logger.info(
 
 ```json
 {
-  "timestamp": "2025-01-10T10:30:00Z",
-  "metric": "request_latency",
-  "component": "stt_service",
-  "value": 850,
-  "unit": "milliseconds",
-  "percentiles": {
-    "p50": 800,
-    "p95": 1200,
-    "p99": 2000
-  }
+ "timestamp": "2025-01-10T10:30:00Z",
+ "metric": "request_latency",
+ "component": "stt_service",
+ "value": 850,
+ "unit": "milliseconds",
+ "percentiles": {
+ "p50": 800,
+ "p95": 1200,
+ "p99": 2000
+ }
 }
 ```
 
@@ -144,31 +144,31 @@ logger.info(
 ### Key Metrics
 
 1. **Conversation Metrics**
-   - Total conversations started
-   - Conversations completed successfully
-   - Average conversation duration
-   - Average turns per conversation
-   - Abandonment rate
+ - Total conversations started
+ - Conversations completed successfully
+ - Average conversation duration
+ - Average turns per conversation
+ - Abandonment rate
 
 2. **Service Metrics**
-   - STT latency (p50, p95, p99)
-   - LLM latency (p50, p95, p99)
-   - TTS latency (p50, p95, p99)
-   - End-to-end latency
-   - Error rates per service
+ - STT latency (p50, p95, p99)
+ - LLM latency (p50, p95, p99)
+ - TTS latency (p50, p95, p99)
+ - End-to-end latency
+ - Error rates per service
 
 3. **State Machine Metrics**
-   - State transition counts
-   - Average time per state
-   - Fallback rate
-   - Retry counts
+ - State transition counts
+ - Average time per state
+ - Fallback rate
+ - Retry counts
 
 4. **Infrastructure Metrics**
-   - CPU usage
-   - Memory usage
-   - Network I/O
-   - Active connections
-   - Queue depths
+ - CPU usage
+ - Memory usage
+ - Network I/O
+ - Active connections
+ - Queue depths
 
 ### Metrics Format (Prometheus)
 
@@ -198,7 +198,7 @@ span_id = generate_span_id()
 
 # Each service adds span
 with tracer.start_span("stt_transcription", trace_id=trace_id, parent_span_id=span_id):
-    result = await stt_service.transcribe(audio)
+ result = await stt_service.transcribe(audio)
 ```
 
 ### Trace Visualization
@@ -251,22 +251,22 @@ import structlog
 from pythonjsonlogger import jsonlogger
 
 def setup_logging(log_level="INFO", output_format="json"):
-    if output_format == "json":
-        handler = logging.StreamHandler()
-        formatter = jsonlogger.JsonFormatter(
-            '%(timestamp)s %(level)s %(name)s %(message)s'
-        )
-        handler.setFormatter(formatter)
-    else:
-        handler = logging.StreamHandler()
-        formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        )
-        handler.setFormatter(formatter)
-    
-    root_logger = logging.getLogger()
-    root_logger.addHandler(handler)
-    root_logger.setLevel(getattr(logging, log_level))
+ if output_format == "json":
+ handler = logging.StreamHandler()
+ formatter = jsonlogger.JsonFormatter(
+ '%(timestamp)s %(level)s %(name)s %(message)s'
+ )
+ handler.setFormatter(formatter)
+ else:
+ handler = logging.StreamHandler()
+ formatter = logging.Formatter(
+ '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+ )
+ handler.setFormatter(formatter)
+
+ root_logger = logging.getLogger()
+ root_logger.addHandler(handler)
+ root_logger.setLevel(getattr(logging, log_level))
 ```
 
 ### Frontend Logging
@@ -274,24 +274,24 @@ def setup_logging(log_level="INFO", output_format="json"):
 ```typescript
 // utils/logger.ts
 export const logger = {
-  info: (message: string, metadata?: object) => {
-    console.log(JSON.stringify({
-      timestamp: new Date().toISOString(),
-      level: 'INFO',
-      message,
-      ...metadata
-    }))
-  },
-  error: (message: string, error?: Error, metadata?: object) => {
-    console.error(JSON.stringify({
-      timestamp: new Date().toISOString(),
-      level: 'ERROR',
-      message,
-      error: error?.message,
-      stack: error?.stack,
-      ...metadata
-    }))
-  }
+ info: (message: string, metadata?: object) => {
+ console.log(JSON.stringify({
+ timestamp: new Date().toISOString(),
+ level: 'INFO',
+ message,
+ ...metadata
+ }))
+ },
+ error: (message: string, error?: Error, metadata?: object) => {
+ console.error(JSON.stringify({
+ timestamp: new Date().toISOString(),
+ level: 'ERROR',
+ message,
+ error: error?.message,
+ stack: error?.stack,
+ ...metadata
+ }))
+ }
 }
 ```
 
@@ -328,4 +328,3 @@ export const logger = {
 - Data access logged (for compliance)
 - Regular log reviews scheduled
 - Log integrity verified (checksums)
-

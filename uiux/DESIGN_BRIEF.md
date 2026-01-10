@@ -49,4 +49,3 @@ Border: #E5E7EB (Light border)
 ## Component Library
 
 See `uiux/components/` for detailed component specifications.
-

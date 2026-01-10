@@ -5,9 +5,9 @@ Get the Voice Agent running in 5 minutes.
 ## Step 1: Set Up Services
 
 Read `services/SERVICES_SETUP.md` and sign up for:
-- ✅ LiveKit Cloud (free tier)
-- ✅ OpenAI (for STT/TTS - $5 free credit)
-- ✅ Ollama (optional, install locally - free)
+- LiveKit Cloud (free tier)
+- OpenAI (for STT/TTS - $5 free credit)
+- Ollama (optional, install locally - free)
 
 ## Step 2: Configure Environment
 
@@ -17,7 +17,7 @@ cd backend
 cp .env.example .env
 # Edit .env with your API keys
 
-# Frontend  
+# Frontend 
 cd ../frontend
 cp .env.example .env.local
 # Edit .env.local with your LiveKit URL
@@ -85,4 +85,3 @@ ollama pull llama3.2
 - Deploy: See `SETUP_AND_RUN.md`
 
 For detailed setup, see `SETUP_AND_RUN.md`.
-

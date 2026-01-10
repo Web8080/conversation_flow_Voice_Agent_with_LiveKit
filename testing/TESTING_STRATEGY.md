@@ -3,13 +3,13 @@
 ## Testing Pyramid
 
 ```
-        /\
-       /E2E\         10% - End-to-End Tests
-      /------\
-     /Integration\   20% - Integration Tests
-    /------------\
-   /  Unit Tests  \  70% - Unit Tests
-  /----------------\
+ /\
+ /E2E\ 10% - End-to-End Tests
+ /------\
+ /Integration\ 20% - Integration Tests
+ /------------\
+ / Unit Tests \ 70% - Unit Tests
+ /----------------\
 ```
 
 ## Test Types
@@ -112,28 +112,28 @@
 
 ```
 testing/
-├── unit/
-│   ├── backend/
-│   │   ├── test_stt_service.py
-│   │   ├── test_llm_service.py
-│   │   ├── test_tts_service.py
-│   │   ├── test_state_machine.py
-│   │   └── test_token_service.py
-│   └── frontend/
-│       ├── components/
-│       └── utils/
-├── integration/
-│   ├── test_conversation_flow.py
-│   ├── test_api_endpoints.py
-│   └── test_database.py
-├── e2e/
-│   ├── test_appointment_flow.spec.ts
-│   ├── test_error_handling.spec.ts
-│   └── test_authentication.spec.ts
-└── performance/
-    ├── load_test.py
-    ├── stress_test.py
-    └── benchmark.py
+ unit/
+ backend/
+ test_stt_service.py
+ test_llm_service.py
+ test_tts_service.py
+ test_state_machine.py
+ test_token_service.py
+ frontend/
+ components/
+ utils/
+ integration/
+ test_conversation_flow.py
+ test_api_endpoints.py
+ test_database.py
+ e2e/
+ test_appointment_flow.spec.ts
+ test_error_handling.spec.ts
+ test_authentication.spec.ts
+ performance/
+ load_test.py
+ stress_test.py
+ benchmark.py
 ```
 
 ## Test Data Management
@@ -180,4 +180,3 @@ npm run test:e2e
 # Run performance tests
 locust -f testing/performance/load_test.py
 ```
-

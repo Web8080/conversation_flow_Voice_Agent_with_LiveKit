@@ -298,23 +298,23 @@ I organized the codebase following Python best practices:
 
 ```
 backend/
-├── agent/
-│   ├── __init__.py
-│   ├── voice_agent.py          # Main agent class
-│   ├── services/
-│   │   ├── stt_service.py      # Speech-to-text abstraction
-│   │   ├── llm_service.py      # LLM interaction
-│   │   └── tts_service.py      # Text-to-speech abstraction
-│   └── state_machine/          # Stage 2 components
-│       ├── state_machine.py    # State machine engine
-│       ├── states.py           # State definitions
-│       ├── context.py          # Conversation context
-│       └── slot_filler.py      # Slot extraction logic
-├── config/
-│   └── settings.py             # Configuration management
-├── utils/
-│   └── logger.py               # Logging utilities
-└── main.py                     # Entry point
+ agent/
+ __init__.py
+ voice_agent.py # Main agent class
+ services/
+ stt_service.py # Speech-to-text abstraction
+ llm_service.py # LLM interaction
+ tts_service.py # Text-to-speech abstraction
+ state_machine/ # Stage 2 components
+ state_machine.py # State machine engine
+ states.py # State definitions
+ context.py # Conversation context
+ slot_filler.py # Slot extraction logic
+ config/
+ settings.py # Configuration management
+ utils/
+ logger.py # Logging utilities
+ main.py # Entry point
 ```
 
 This structure promotes:
@@ -524,4 +524,3 @@ I'm happy to answer any questions about the implementation, design decisions, or
 - Transitions are explicit and validated
 - Easy to add new states or modify existing ones
 - Follows industry best practices (similar to Retell AI, Voiceflow)
-

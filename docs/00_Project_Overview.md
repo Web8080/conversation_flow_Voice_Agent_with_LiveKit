@@ -6,7 +6,7 @@ This repository contains the complete documentation, design, and implementation 
 
 ## Quick Start - Read These First
 
-1. **`VOICE_AGENT_DESIGN.md`** ⭐ **START HERE** - Clean, presentation-ready system design
+1. **`VOICE_AGENT_DESIGN.md`** **START HERE** - Clean, presentation-ready system design
 2. **`EXECUTIVE_APPROACH.md`** - Professional execution strategy and what they're really testing
 3. **`CURSOR_AI_PROMPTS.md`** - Implementation prompts for incremental development
 
@@ -14,7 +14,7 @@ This repository contains the complete documentation, design, and implementation 
 
 ### Primary Documents (Interview Ready)
 
-**`VOICE_AGENT_DESIGN.md`** ⭐
+**`VOICE_AGENT_DESIGN.md`** 
 - Clean, focused system design document
 - Architecture, state machine design, and rationale
 - **This is what you'll walk through in the interview**
@@ -120,4 +120,3 @@ Extend the agent with state machine-based conversation flow:
 ## Contact and Questions
 
 For questions about this project or design decisions, refer to the presentation document (`03_Project_Presentation_Thought_Process.md`) which contains detailed explanations of the approach and rationale.
-

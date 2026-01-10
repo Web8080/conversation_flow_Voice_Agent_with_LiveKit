@@ -13,13 +13,13 @@ This document outlines all external services required for the Voice Agent system
 3. Create a new project
 4. Navigate to "API Keys" section
 5. Create a new API key with these permissions:
-   - `room:create`
-   - `room:list`
-   - `room:record`
+ - `room:create`
+ - `room:list`
+ - `room:record`
 6. Copy the following:
-   - `LIVEKIT_URL` (WebSocket URL, e.g., `wss://your-project.livekit.cloud`)
-   - `LIVEKIT_API_KEY` (API Key)
-   - `LIVEKIT_API_SECRET` (API Secret)
+ - `LIVEKIT_URL` (WebSocket URL, e.g., `wss://your-project.livekit.cloud`)
+ - `LIVEKIT_API_KEY` (API Key)
+ - `LIVEKIT_API_SECRET` (API Secret)
 
 **Free Tier**: Includes limited usage, suitable for development/testing
 **Pricing**: Pay-as-you-go after free tier
@@ -68,17 +68,17 @@ This document outlines all external services required for the Voice Agent system
 2. Download Ollama for your OS (macOS, Linux, Windows)
 3. Install the application
 4. Open terminal and run:
-   ```bash
-   ollama pull llama3.2
-   # or
-   ollama pull mistral
-   # or
-   ollama pull qwen2.5
-   ```
+ ```bash
+ ollama pull llama3.2
+ # or
+ ollama pull mistral
+ # or
+ ollama pull qwen2.5
+ ```
 5. Test it:
-   ```bash
-   ollama run llama3.2 "Hello, how are you?"
-   ```
+ ```bash
+ ollama run llama3.2 "Hello, how are you?"
+ ```
 
 **Configuration**:
 - `OLLAMA_BASE_URL`: Default is `http://localhost:11434`
@@ -264,4 +264,3 @@ For full production setup:
 - OpenAI Support: https://help.openai.com/
 - Ollama GitHub: https://github.com/ollama/ollama
 - Groq Support: https://console.groq.com/docs
-

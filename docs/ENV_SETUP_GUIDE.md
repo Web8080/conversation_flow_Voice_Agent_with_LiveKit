@@ -1,15 +1,15 @@
 # Environment Variables Setup Guide
 
-## ✅ Files Created
+## Files Created
 
 I've created the `.env` files for you with your LiveKit API Key already included:
 
-- ✅ `backend/.env` - Backend configuration
-- ✅ `frontend/.env.local` - Frontend configuration
+- `backend/.env` - Backend configuration
+- `frontend/.env.local` - Frontend configuration
 
 ---
 
-## 🔑 What You Need to Update
+## What You Need to Update
 
 ### 1. **LiveKit WebSocket URL** (REQUIRED)
 **Where to find it:**
@@ -57,14 +57,14 @@ I've created the `.env` files for you with your LiveKit API Key already included
 
 ---
 
-## 📝 Quick Edit Commands
+## Quick Edit Commands
 
 ### Edit Backend .env
 ```bash
 cd backend
 nano .env
 # or
-code .env  # if using VS Code
+code .env # if using VS Code
 ```
 
 ### Edit Frontend .env.local
@@ -72,30 +72,30 @@ code .env  # if using VS Code
 cd frontend
 nano .env.local
 # or
-code .env.local  # if using VS Code
+code .env.local # if using VS Code
 ```
 
 ---
 
-## ✅ Current Status
+## Current Status
 
-### ✅ Already Configured:
-- ✅ `LIVEKIT_API_KEY=APIjAbndhXSoyis` (added to both files)
+### Already Configured:
+- `LIVEKIT_API_KEY=APIjAbndhXSoyis` (added to both files)
 
-### ⚠️ Need to Update:
-- ⚠️ `LIVEKIT_URL` - Add your WebSocket URL
-- ⚠️ `LIVEKIT_API_SECRET` - Add your API Secret from dashboard
-- ⚠️ `OPENAI_API_KEY` - Get from https://platform.openai.com/api-keys
+### Need to Update:
+- `LIVEKIT_URL` - Add your WebSocket URL
+- `LIVEKIT_API_SECRET` - Add your API Secret from dashboard
+- `OPENAI_API_KEY` - Get from https://platform.openai.com/api-keys
 
-### 📌 Optional (but recommended):
+### Optional (but recommended):
 - **Ollama** (for local LLM - FREE):
-  - Install: https://ollama.ai/
-  - Run: `ollama pull llama3.2`
-  - Already configured in `.env`, just needs Ollama running locally
+ - Install: https://ollama.ai/
+ - Run: `ollama pull llama3.2`
+ - Already configured in `.env`, just needs Ollama running locally
 
 ---
 
-## 🔍 How to Verify LiveKit Credentials
+## How to Verify LiveKit Credentials
 
 Once you've updated the files, you can verify they work:
 
@@ -123,7 +123,7 @@ npm run dev
 
 ---
 
-## 🚨 Security Notes
+## Security Notes
 
 1. **Never commit `.env` files** to Git (they're already in `.gitignore`)
 2. **API Secret** should be kept secure - never share it publicly
@@ -132,7 +132,7 @@ npm run dev
 
 ---
 
-## 📋 Quick Checklist
+## Quick Checklist
 
 Before running the system, make sure:
 
@@ -144,42 +144,42 @@ Before running the system, make sure:
 
 ---
 
-## 🚀 Next Steps
+## Next Steps
 
 Once you've updated the `.env` files:
 
 1. **Install backend dependencies:**
-   ```bash
-   cd backend
-   pip install -r requirements.txt
-   ```
+ ```bash
+ cd backend
+ pip install -r requirements.txt
+ ```
 
 2. **Install frontend dependencies** (if not already done):
-   ```bash
-   cd frontend
-   npm install
-   ```
+ ```bash
+ cd frontend
+ npm install
+ ```
 
 3. **Start the system:**
-   ```bash
-   # Terminal 1: Backend agent
-   cd backend
-   python main.py dev
-   
-   # Terminal 2: Frontend (already running on port 3000)
-   cd frontend
-   npm run dev
-   ```
+ ```bash
+ # Terminal 1: Backend agent
+ cd backend
+ python main.py dev
+
+ # Terminal 2: Frontend (already running on port 3000)
+ cd frontend
+ npm run dev
+ ```
 
 4. **Test the connection:**
-   - Open http://localhost:3000
-   - Enter a room name
-   - Click "Connect"
-   - Check console for connection status
+ - Open http://localhost:3000
+ - Enter a room name
+ - Click "Connect"
+ - Check console for connection status
 
 ---
 
-## 🆘 Troubleshooting
+## Troubleshooting
 
 ### "Missing LiveKit credentials" error
 - Check that `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` are set in `frontend/.env.local`
@@ -202,7 +202,7 @@ Once you've updated the `.env` files:
 
 ---
 
-## 📞 Support
+## Support
 
 - **LiveKit**: https://docs.livekit.io/
 - **OpenAI**: https://platform.openai.com/docs/
@@ -210,14 +210,13 @@ Once you've updated the `.env` files:
 
 ---
 
-## 📝 Example Values (DO NOT USE THESE - Get your own!)
+## Example Values (DO NOT USE THESE - Get your own!)
 
 ```
 LIVEKIT_URL=wss://my-project.livekit.cloud
-LIVEKIT_API_KEY=APIjAbndhXSoyis  ✅ You already have this
-LIVEKIT_API_SECRET=abc123xyz789secretkey  ⚠️ Get from dashboard
-OPENAI_API_KEY=sk-proj-abc123xyz789  ⚠️ Get from platform.openai.com
+LIVEKIT_API_KEY=APIjAbndhXSoyis You already have this
+LIVEKIT_API_SECRET=abc123xyz789secretkey Get from dashboard
+OPENAI_API_KEY=sk-proj-abc123xyz789 Get from platform.openai.com
 ```
 
 **Remember**: Never commit real API keys to Git!
-

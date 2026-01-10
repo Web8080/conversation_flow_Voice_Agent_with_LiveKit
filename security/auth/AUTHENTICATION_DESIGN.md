@@ -7,19 +7,19 @@
 The voice agent system uses a **multi-layer authentication approach**:
 
 1. **LiveKit Token Authentication** (Primary)
-   - JWT-based tokens for room access
-   - Server-side token generation
-   - Token expiration and validation
+ - JWT-based tokens for room access
+ - Server-side token generation
+ - Token expiration and validation
 
 2. **API Authentication** (Secondary)
-   - Session-based or JWT for API endpoints
-   - Rate limiting per authenticated user
-   - Optional: OAuth2/OIDC for enterprise
+ - Session-based or JWT for API endpoints
+ - Rate limiting per authenticated user
+ - Optional: OAuth2/OIDC for enterprise
 
 3. **User Management** (Optional)
-   - Anonymous users (default)
-   - Authenticated users (for appointment tracking)
-   - Admin users (for system management)
+ - Anonymous users (default)
+ - Authenticated users (for appointment tracking)
+ - Admin users (for system management)
 
 ## Authentication Flows
 
@@ -63,21 +63,21 @@ User → Enterprise SSO → OAuth2/OIDC → JWT → Request LiveKit Token → Ba
 
 ```json
 {
-  "sub": "user-id-or-anonymous",
-  "iss": "your-server",
-  "exp": 1234567890,
-  "video": {
-    "room": "voice-agent-room",
-    "roomJoin": true,
-    "canPublish": true,
-    "canSubscribe": true
-  },
-  "audio": {
-    "room": "voice-agent-room",
-    "roomJoin": true,
-    "canPublish": true,
-    "canSubscribe": true
-  }
+ "sub": "user-id-or-anonymous",
+ "iss": "your-server",
+ "exp": 1234567890,
+ "video": {
+ "room": "voice-agent-room",
+ "roomJoin": true,
+ "canPublish": true,
+ "canSubscribe": true
+ },
+ "audio": {
+ "room": "voice-agent-room",
+ "roomJoin": true,
+ "canPublish": true,
+ "canSubscribe": true
+ }
 }
 ```
 
@@ -89,13 +89,13 @@ User → Enterprise SSO → OAuth2/OIDC → JWT → Request LiveKit Token → Ba
 
 ```json
 {
-  "sub": "user-id",
-  "iss": "voice-agent-api",
-  "exp": 1234567890,
-  "iat": 1234567890,
-  "aud": "voice-agent-frontend",
-  "roles": ["user"],
-  "permissions": ["create_conversation", "view_appointments"]
+ "sub": "user-id",
+ "iss": "voice-agent-api",
+ "exp": 1234567890,
+ "iat": 1234567890,
+ "aud": "voice-agent-frontend",
+ "roles": ["user"],
+ "permissions": ["create_conversation", "view_appointments"]
 }
 ```
 
@@ -137,36 +137,36 @@ User → Enterprise SSO → OAuth2/OIDC → JWT → Request LiveKit Token → Ba
 ### Backend
 
 1. **Token Generation Service**
-   - Generate LiveKit tokens
-   - Validate user permissions
-   - Handle token expiration
+ - Generate LiveKit tokens
+ - Validate user permissions
+ - Handle token expiration
 
 2. **Authentication Middleware**
-   - Verify JWT tokens
-   - Extract user context
-   - Handle authentication errors
+ - Verify JWT tokens
+ - Extract user context
+ - Handle authentication errors
 
 3. **Rate Limiting Middleware**
-   - Per-IP rate limiting
-   - Per-user rate limiting (if authenticated)
-   - Token generation throttling
+ - Per-IP rate limiting
+ - Per-user rate limiting (if authenticated)
+ - Token generation throttling
 
 ### Frontend
 
 1. **Auth Context**
-   - Manage authentication state
-   - Handle token refresh
-   - Provide auth methods
+ - Manage authentication state
+ - Handle token refresh
+ - Provide auth methods
 
 2. **Protected Routes**
-   - Require authentication for certain routes
-   - Redirect to login if not authenticated
-   - Handle token expiration
+ - Require authentication for certain routes
+ - Redirect to login if not authenticated
+ - Handle token expiration
 
 3. **Token Management**
-   - Request tokens from backend
-   - Store tokens securely
-   - Handle token refresh
+ - Request tokens from backend
+ - Store tokens securely
+ - Handle token refresh
 
 ## User Roles & Permissions
 
@@ -224,4 +224,3 @@ User → Enterprise SSO → OAuth2/OIDC → JWT → Request LiveKit Token → Ba
 4. **Single Sign-On (SSO)**
 5. **Device Management**
 6. **Session Management Dashboard**
-

@@ -50,44 +50,44 @@ This is what you'll walk them through in the interview. It demonstrates:
 **Execution Order:**
 
 1. **Architecture Skeleton** (Prompt 1)
-   - Clean class structure
-   - Service abstractions
-   - No state machine yet
-   - **Commit**: "feat: initial architecture skeleton"
+ - Clean class structure
+ - Service abstractions
+ - No state machine yet
+ - **Commit**: "feat: initial architecture skeleton"
 
 2. **State Machine Foundation** (Prompt 2)
-   - Abstract state machine
-   - Context management
-   - Transition logic
-   - **Commit**: "feat: state machine abstraction"
+ - Abstract state machine
+ - Context management
+ - Transition logic
+ - **Commit**: "feat: state machine abstraction"
 
 3. **Conversation Flow** (Prompt 3)
-   - Implement 1-2 states initially
-   - Get flow working end-to-end
-   - **Commit**: "feat: basic conversation flow"
+ - Implement 1-2 states initially
+ - Get flow working end-to-end
+ - **Commit**: "feat: basic conversation flow"
 
 4. **Error Handling** (Prompt 4)
-   - Service-level errors
-   - State-level retries
-   - Connection recovery
-   - **Commit**: "feat: error handling and retries"
+ - Service-level errors
+ - State-level retries
+ - Connection recovery
+ - **Commit**: "feat: error handling and retries"
 
 5. **Integration** (Prompt 5)
-   - Connect all components
-   - Pipeline optimization
-   - Observability
-   - **Commit**: "feat: end-to-end integration"
+ - Connect all components
+ - Pipeline optimization
+ - Observability
+ - **Commit**: "feat: end-to-end integration"
 
 6. **Frontend** (Prompt 6)
-   - Minimal but functional
-   - Clean UI
-   - **Commit**: "feat: frontend implementation"
+ - Minimal but functional
+ - Clean UI
+ - **Commit**: "feat: frontend implementation"
 
 7. **Documentation** (Prompt 8)
-   - README
-   - Architecture docs
-   - Deployment guide
-   - **Commit**: "docs: comprehensive documentation"
+ - README
+ - Architecture docs
+ - Deployment guide
+ - **Commit**: "docs: comprehensive documentation"
 
 ---
 
@@ -101,24 +101,24 @@ This is what you'll walk them through in the interview. It demonstrates:
 **Key Messages:**
 
 1. **"I approached this as a production system, not a demo"**
-   - Started with requirements and design
-   - Thought about error handling from the start
-   - Designed for extensibility
+ - Started with requirements and design
+ - Thought about error handling from the start
+ - Designed for extensibility
 
 2. **"I chose state machines because voice interactions need structure"**
-   - LLMs are powerful but unpredictable
-   - State machines provide deterministic flow
-   - Best of both worlds: LLM for understanding, states for control
+ - LLMs are powerful but unpredictable
+ - State machines provide deterministic flow
+ - Best of both worlds: LLM for understanding, states for control
 
 3. **"I prioritized clarity and correctness over features"**
-   - Clean separation of concerns
-   - Each component testable independently
-   - Easy to reason about and extend
+ - Clean separation of concerns
+ - Each component testable independently
+ - Easy to reason about and extend
 
 4. **"Here's what I would improve next..."**
-   - Shows you think beyond the exercise
-   - Demonstrates production mindset
-   - Signals you understand tradeoffs
+ - Shows you think beyond the exercise
+ - Demonstrates production mindset
+ - Signals you understand tradeoffs
 
 ---
 
@@ -158,21 +158,21 @@ This is what you'll walk them through in the interview. It demonstrates:
 
 ### Walk Through Design Document (5-7 minutes)
 1. Start with architecture diagram
-   - "I separated concerns into clear layers..."
+ - "I separated concerns into clear layers..."
 2. Explain state machine design
-   - "Voice interactions are linear and error-prone, so I used a state machine..."
+ - "Voice interactions are linear and error-prone, so I used a state machine..."
 3. Show state diagram
-   - "Here's the flow for appointment scheduling..."
+ - "Here's the flow for appointment scheduling..."
 4. Discuss tradeoffs
-   - "I chose this approach because..."
+ - "I chose this approach because..."
 
 ### Demo (3-5 minutes)
 1. Show Stage 1 working
-   - "Basic voice loop is functional..."
+ - "Basic voice loop is functional..."
 2. Show Stage 2 conversation flow
-   - "State machine handles the structured flow..."
+ - "State machine handles the structured flow..."
 3. Demonstrate error handling
-   - "Here's what happens when input is unclear..."
+ - "Here's what happens when input is unclear..."
 
 ### Discussion (5-10 minutes)
 Be ready for questions about:
@@ -244,4 +244,3 @@ This isn't about perfect code. It's about demonstrating:
 - **Professional communication**
 
 The design document is your primary deliverable. The code proves you can execute on the design.
-

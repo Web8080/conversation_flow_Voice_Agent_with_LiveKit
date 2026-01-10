@@ -12,16 +12,16 @@ from auth.middleware import auth_middleware
 
 # Generate LiveKit token
 token = token_service.generate_room_token(
-    room_name="voice-agent-room",
-    user_id="user-123",
-    user_name="John Doe"
+ room_name="voice-agent-room",
+ user_id="user-123",
+ user_name="John Doe"
 )
 
 # Protect endpoint
 @auth_middleware.require_auth
 def protected_endpoint():
-    user_id = g.user_id  # Available from middleware
-    return jsonify({"user_id": user_id})
+ user_id = g.user_id # Available from middleware
+ return jsonify({"user_id": user_id})
 ```
 
 ### Frontend Authentication
@@ -32,14 +32,14 @@ Use the AuthProvider context:
 import { useAuth } from '@/components/auth/AuthProvider'
 
 function MyComponent() {
-  const { user, isAuthenticated, login, logout } = useAuth()
-  
-  // Check auth status
-  if (!isAuthenticated) {
-    return <LoginButton />
-  }
-  
-  return <ProtectedContent />
+ const { user, isAuthenticated, login, logout } = useAuth()
+
+ // Check auth status
+ if (!isAuthenticated) {
+ return <LoginButton />
+ }
+
+ return <ProtectedContent />
 }
 ```
 
@@ -60,18 +60,18 @@ Generate LiveKit room token (rate limited: 60/min)
 Request:
 ```json
 {
-  "room_name": "voice-agent-room",
-  "user_id": "optional-user-id",
-  "user_name": "Optional Name"
+ "room_name": "voice-agent-room",
+ "user_id": "optional-user-id",
+ "user_name": "Optional Name"
 }
 ```
 
 Response:
 ```json
 {
-  "token": "livekit-jwt-token",
-  "room_name": "voice-agent-room",
-  "expires_in": 3600
+ "token": "livekit-jwt-token",
+ "room_name": "voice-agent-room",
+ "expires_in": 3600
 }
 ```
 
@@ -96,14 +96,14 @@ Get current user permissions (requires auth)
 ```bash
 # Test token generation
 curl -X POST http://localhost:8000/api/auth/token \
-  -H "Content-Type: application/json" \
-  -d '{"room_name": "test-room"}'
+ -H "Content-Type: application/json" \
+ -d '{"room_name": "test-room"}'
 
 # Test rate limiting (send 61 requests)
 for i in {1..61}; do
-  curl -X POST http://localhost:8000/api/auth/token \
-    -H "Content-Type: application/json" \
-    -d '{"room_name": "test-room"}'
+ curl -X POST http://localhost:8000/api/auth/token \
+ -H "Content-Type: application/json" \
+ -d '{"room_name": "test-room"}'
 done
 ```
 
@@ -116,4 +116,3 @@ done
 5. **Implement audit logging** for auth events
 6. **Add MFA** for sensitive operations
 7. **Use OAuth2/OIDC** for enterprise SSO
-
