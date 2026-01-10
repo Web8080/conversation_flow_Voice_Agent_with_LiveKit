@@ -20,21 +20,26 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // For LiveKit Cloud Twirp API, we need to generate a server token
-      // This token is different from room access tokens - it's for API calls
+      // For LiveKit Cloud Twirp API, generate a server admin token
+      // The token needs admin permissions and room access for dispatch
       const at = new AccessToken(apiKey, apiSecret, {
-        identity: apiKey, // Use API key as identity
+        identity: 'dispatch-service',
         name: 'Agent Dispatch Service',
       })
       
-      // Grant full admin permissions for server API calls
+      // Grant admin permissions with room access for agent dispatch
+      // Include the room in the grant since we're dispatching to a specific room
       at.addGrant({
-        roomAdmin: true,
+        room: room_name, // Include room for dispatch
+        roomAdmin: true, // Admin access needed for agent dispatch
         canPublish: true,
         canSubscribe: true,
         canPublishData: true,
         canUpdateOwnMetadata: true,
       })
+      
+      // Set token expiration (5 minutes for API calls)
+      at.ttl = '5m'
       
       // Generate Bearer token (synchronous, no await)
       const bearerToken = at.toJwt()
