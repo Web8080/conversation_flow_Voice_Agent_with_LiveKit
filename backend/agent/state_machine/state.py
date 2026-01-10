@@ -1,0 +1,330 @@
+from abc import ABC, abstractmethod
+from typing import Optional, Dict, Any, List
+from dataclasses import dataclass
+from agent.state_machine.context import ConversationContext, Turn
+from utils.logger import logger
+
+
+@dataclass
+class StateResponse:
+    next_state: Optional[str]
+    response_text: str
+    should_continue: bool = True
+    extracted_slots: Dict[str, Any] = None
+    
+    def __post_init__(self):
+        if self.extracted_slots is None:
+            self.extracted_slots = {}
+
+
+class ConversationState(ABC):
+    def __init__(self, name: str, description: str = ""):
+        self.name = name
+        self.description = description
+        self.required_slots: List[str] = []
+        self.optional_slots: List[str] = []
+        self.max_retries: int = 3
+        self.fallback_state: str = "fallback"
+    
+    @abstractmethod
+    def get_prompt(self, context: ConversationContext) -> str:
+        pass
+    
+    @abstractmethod
+    async def handle_input(
+        self, 
+        user_text: str, 
+        context: ConversationContext,
+        llm_service
+    ) -> StateResponse:
+        pass
+    
+    def can_transition_to(self, target_state: str) -> bool:
+        return True
+    
+    def extract_slots(self, user_text: str, context: ConversationContext, llm_service) -> Dict[str, Any]:
+        return {}
+
+
+class GreetingState(ConversationState):
+    def __init__(self):
+        super().__init__("greeting", "Initial greeting and introduction")
+    
+    def get_prompt(self, context: ConversationContext) -> str:
+        return "Hello! I'm your appointment scheduling assistant. I can help you book an appointment. What's your name?"
+    
+    async def handle_input(
+        self, 
+        user_text: str, 
+        context: ConversationContext,
+        llm_service
+    ) -> StateResponse:
+        context.add_turn(Turn(role="user", text=user_text))
+        
+        extracted_slots = await self._extract_name(user_text, context, llm_service)
+        
+        if extracted_slots.get("name"):
+            context.update_slot("name", extracted_slots["name"])
+            response_text = f"Nice to meet you, {extracted_slots['name']}! When would you like to schedule your appointment? Please provide a date."
+            context.add_turn(Turn(role="agent", text=response_text))
+            return StateResponse(
+                next_state="collect_date",
+                response_text=response_text,
+                extracted_slots=extracted_slots
+            )
+        else:
+            response_text = "I didn't catch your name. Could you please tell me your name?"
+            context.add_turn(Turn(role="agent", text=response_text))
+            return StateResponse(
+                next_state="greeting",
+                response_text=response_text
+            )
+    
+    async def _extract_name(self, user_text: str, context: ConversationContext, llm_service) -> Dict[str, Any]:
+        prompt = f"""Extract the person's name from this text. If no name is mentioned, return empty string.
+Text: "{user_text}"
+Return only the name, nothing else."""
+        
+        try:
+            response = await llm_service.generate_response(prompt)
+            if response and len(response.strip()) > 0:
+                return {"name": response.strip()}
+        except Exception as e:
+            logger.error("Name extraction failed", error=str(e))
+        
+        return {}
+
+
+class CollectDateState(ConversationState):
+    def __init__(self):
+        super().__init__("collect_date", "Collect appointment date")
+        self.required_slots = ["date"]
+    
+    def get_prompt(self, context: ConversationContext) -> str:
+        name = context.get_slot("name") or "there"
+        return f"Hi {name}, when would you like to schedule your appointment? Please provide a date."
+    
+    async def handle_input(
+        self, 
+        user_text: str, 
+        context: ConversationContext,
+        llm_service
+    ) -> StateResponse:
+        context.add_turn(Turn(role="user", text=user_text))
+        
+        extracted_slots = await self._extract_date(user_text, context, llm_service)
+        
+        if extracted_slots.get("date"):
+            context.update_slot("date", extracted_slots["date"])
+            response_text = f"Great! I have you scheduled for {extracted_slots['date']}. What time would you prefer?"
+            context.add_turn(Turn(role="agent", text=response_text))
+            context.reset_retry_count()
+            return StateResponse(
+                next_state="collect_time",
+                response_text=response_text,
+                extracted_slots=extracted_slots
+            )
+        else:
+            context.increment_retry_count()
+            if context.retry_count >= self.max_retries:
+                response_text = "I'm having trouble understanding the date. Let me connect you with a human agent who can help."
+                context.add_turn(Turn(role="agent", text=response_text))
+                return StateResponse(
+                    next_state="fallback",
+                    response_text=response_text,
+                    should_continue=False
+                )
+            else:
+                response_text = "I didn't catch the date. Could you please provide a specific date? For example, 'January 15th' or 'next Monday'."
+                context.add_turn(Turn(role="agent", text=response_text))
+                return StateResponse(
+                    next_state="collect_date",
+                    response_text=response_text
+                )
+    
+    async def _extract_date(self, user_text: str, context: ConversationContext, llm_service) -> Dict[str, Any]:
+        prompt = f"""Extract the date from this text. Convert relative dates like "tomorrow" or "next week" to specific dates.
+Today is {context.created_at.strftime('%Y-%m-%d')}.
+Text: "{user_text}"
+Return only the date in YYYY-MM-DD format, or empty string if no date found."""
+        
+        try:
+            response = await llm_service.generate_response(prompt)
+            if response and len(response.strip()) > 0:
+                date_str = response.strip()
+                if len(date_str) >= 10:
+                    return {"date": date_str[:10]}
+        except Exception as e:
+            logger.error("Date extraction failed", error=str(e))
+        
+        return {}
+
+
+class CollectTimeState(ConversationState):
+    def __init__(self):
+        super().__init__("collect_time", "Collect appointment time")
+        self.required_slots = ["time"]
+    
+    def get_prompt(self, context: ConversationContext) -> str:
+        date = context.get_slot("date") or "your selected date"
+        return f"What time would you prefer for your appointment on {date}? Please provide a time, for example '2 PM' or '14:00'."
+    
+    async def handle_input(
+        self, 
+        user_text: str, 
+        context: ConversationContext,
+        llm_service
+    ) -> StateResponse:
+        context.add_turn(Turn(role="user", text=user_text))
+        
+        extracted_slots = await self._extract_time(user_text, context, llm_service)
+        
+        if extracted_slots.get("time"):
+            context.update_slot("time", extracted_slots["time"])
+            date = context.get_slot("date") or "the selected date"
+            response_text = f"Perfect! I have {extracted_slots['time']} on {date}. Is this correct?"
+            context.add_turn(Turn(role="agent", text=response_text))
+            context.reset_retry_count()
+            return StateResponse(
+                next_state="confirmation",
+                response_text=response_text,
+                extracted_slots=extracted_slots
+            )
+        else:
+            context.increment_retry_count()
+            if context.retry_count >= self.max_retries:
+                response_text = "I'm having trouble understanding the time. Let me connect you with a human agent."
+                context.add_turn(Turn(role="agent", text=response_text))
+                return StateResponse(
+                    next_state="fallback",
+                    response_text=response_text,
+                    should_continue=False
+                )
+            else:
+                response_text = "I didn't catch the time. Could you please provide a specific time? For example, '2 PM' or '14:00'."
+                context.add_turn(Turn(role="agent", text=response_text))
+                return StateResponse(
+                    next_state="collect_time",
+                    response_text=response_text
+                )
+    
+    async def _extract_time(self, user_text: str, context: ConversationContext, llm_service) -> Dict[str, Any]:
+        prompt = f"""Extract the time from this text. Convert to 24-hour format (HH:MM).
+Text: "{user_text}"
+Return only the time in HH:MM format (e.g., "14:00" for 2 PM), or empty string if no time found."""
+        
+        try:
+            response = await llm_service.generate_response(prompt)
+            if response and len(response.strip()) > 0:
+                time_str = response.strip()
+                return {"time": time_str}
+        except Exception as e:
+            logger.error("Time extraction failed", error=str(e))
+        
+        return {}
+
+
+class ConfirmationState(ConversationState):
+    def __init__(self):
+        super().__init__("confirmation", "Confirm appointment details")
+    
+    def get_prompt(self, context: ConversationContext) -> str:
+        name = context.get_slot("name") or "you"
+        date = context.get_slot("date") or "the selected date"
+        time = context.get_slot("time") or "the selected time"
+        return f"Just to confirm: {name}, you want to schedule an appointment on {date} at {time}. Is this correct? Please say yes or no."
+    
+    async def handle_input(
+        self, 
+        user_text: str, 
+        context: ConversationContext,
+        llm_service
+    ) -> StateResponse:
+        context.add_turn(Turn(role="user", text=user_text))
+        
+        confirmed = await self._extract_confirmation(user_text, context, llm_service)
+        
+        if confirmed:
+            name = context.get_slot("name") or "you"
+            date = context.get_slot("date") or "the selected date"
+            time = context.get_slot("time") or "the selected time"
+            response_text = f"Perfect! Your appointment is confirmed for {name} on {date} at {time}. Thank you, and have a great day!"
+            context.add_turn(Turn(role="agent", text=response_text))
+            return StateResponse(
+                next_state="terminal",
+                response_text=response_text,
+                should_continue=False
+            )
+        else:
+            response_text = "No problem. Let's start over. What date would you like to schedule your appointment?"
+            context.add_turn(Turn(role="agent", text=response_text))
+            context.slots.pop("date", None)
+            context.slots.pop("time", None)
+            context.reset_retry_count()
+            return StateResponse(
+                next_state="collect_date",
+                response_text=response_text
+            )
+    
+    async def _extract_confirmation(self, user_text: str, context: ConversationContext, llm_service) -> bool:
+        prompt = f"""Determine if this text is a confirmation (yes/affirmative) or rejection (no/negative).
+Text: "{user_text}"
+Return only "yes" or "no"."""
+        
+        try:
+            response = await llm_service.generate_response(prompt)
+            if response:
+                response_lower = response.strip().lower()
+                return response_lower.startswith("yes") or response_lower.startswith("y") or "correct" in response_lower or "right" in response_lower
+        except Exception as e:
+            logger.error("Confirmation extraction failed", error=str(e))
+        
+        return False
+
+
+class FallbackState(ConversationState):
+    def __init__(self):
+        super().__init__("fallback", "Handle unclear input or errors")
+    
+    def get_prompt(self, context: ConversationContext) -> str:
+        return "I'm having trouble understanding. Could you please repeat that?"
+    
+    async def handle_input(
+        self, 
+        user_text: str, 
+        context: ConversationContext,
+        llm_service
+    ) -> StateResponse:
+        context.add_turn(Turn(role="user", text=user_text))
+        
+        previous_state = context.current_state or "greeting"
+        response_text = "Let me connect you with a human agent who can better assist you. Thank you for your patience."
+        context.add_turn(Turn(role="agent", text=response_text))
+        
+        return StateResponse(
+            next_state="terminal",
+            response_text=response_text,
+            should_continue=False
+        )
+
+
+class TerminalState(ConversationState):
+    def __init__(self):
+        super().__init__("terminal", "End conversation")
+    
+    def get_prompt(self, context: ConversationContext) -> str:
+        return "Thank you for using our service. Goodbye!"
+    
+    async def handle_input(
+        self, 
+        user_text: str, 
+        context: ConversationContext,
+        llm_service
+    ) -> StateResponse:
+        response_text = "The conversation has ended. Thank you!"
+        return StateResponse(
+            next_state=None,
+            response_text=response_text,
+            should_continue=False
+        )
+

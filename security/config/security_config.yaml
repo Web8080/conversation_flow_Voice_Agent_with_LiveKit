@@ -1,0 +1,95 @@
+# Security Configuration
+
+# API Security
+api_security:
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 60
+    requests_per_hour: 1000
+  
+  cors:
+    allowed_origins:
+      - "https://yourdomain.com"
+      - "https://www.yourdomain.com"
+    allowed_methods:
+      - "GET"
+      - "POST"
+      - "OPTIONS"
+    allowed_headers:
+      - "Content-Type"
+      - "Authorization"
+    credentials: true
+  
+  token_validation:
+    expiration_seconds: 3600  # 1 hour
+    refresh_enabled: true
+    max_refresh_attempts: 3
+
+# Input Validation
+input_validation:
+  room_name:
+    min_length: 3
+    max_length: 100
+    pattern: "^[a-zA-Z0-9_-]+$"  # Alphanumeric, underscore, hyphen only
+  
+  text_input:
+    max_length: 5000
+    sanitize_html: true
+    block_sql_injection: true
+    block_xss: true
+
+# Secrets Management
+secrets:
+  rotation_interval_days: 90
+  storage_backend: "environment"  # Options: environment, aws_secrets_manager, vault
+  encryption_at_rest: true
+
+# Logging Security
+logging:
+  sanitize_logs: true
+  exclude_patterns:
+    - ".*api[_-]?key.*"
+    - ".*password.*"
+    - ".*secret.*"
+    - ".*token.*"
+  log_level: "INFO"  # Don't log DEBUG in production
+
+# Database Security
+database:
+  connection_encryption: true
+  query_timeout_seconds: 30
+  max_connections: 100
+  connection_pooling: true
+  ssl_mode: "require"
+
+# LiveKit Security
+livekit:
+  token_validation:
+    enforce_expiration: true
+    validate_signature: true
+    check_permissions: true
+  room_security:
+    require_authentication: true
+    max_participants: 10
+    auto_delete_idle_rooms: true
+    idle_timeout_seconds: 300
+
+# Error Handling
+error_handling:
+  expose_stack_traces: false
+  expose_system_info: false
+  generic_error_messages: true
+  log_full_errors: true  # Log details, but don't expose to users
+
+# Monitoring & Alerting
+monitoring:
+  security_events:
+    - authentication_failure
+    - permission_denied
+    - rate_limit_exceeded
+    - suspicious_activity
+  alert_thresholds:
+    failed_auth_per_minute: 10
+    rate_limit_violations_per_hour: 100
+    error_rate_percentage: 10
+
