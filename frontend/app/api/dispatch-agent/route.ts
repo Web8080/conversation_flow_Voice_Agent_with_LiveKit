@@ -20,39 +20,19 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // For LiveKit Cloud Twirp API, generate a server admin token
-      // The token needs admin permissions and room access for dispatch
-      const at = new AccessToken(apiKey, apiSecret, {
-        identity: 'dispatch-service',
-        name: 'Agent Dispatch Service',
-      })
-      
-      // Grant admin permissions with room access for agent dispatch
-      // Include the room in the grant since we're dispatching to a specific room
-      at.addGrant({
-        room: room_name, // Include room for dispatch
-        roomAdmin: true, // Admin access needed for agent dispatch
-        canPublish: true,
-        canSubscribe: true,
-        canPublishData: true,
-        canUpdateOwnMetadata: true,
-      })
-      
-      // Set token expiration (5 minutes for API calls)
-      at.ttl = '5m'
-      
-      // Generate Bearer token (synchronous, no await)
-      const bearerToken = at.toJwt()
+      // For LiveKit Cloud Twirp API, use Basic authentication
+      // The API expects Basic auth (API key:secret base64 encoded) for server-side calls
+      // This is different from client-side Bearer tokens
+      const livekitApiUrl = livekitUrl.replace('wss://', 'https://')
+      const basicAuth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64')
       
       // Use LiveKit Twirp API to dispatch agent
-      // The endpoint URL should match the LiveKit Cloud instance
-      const livekitApiUrl = livekitUrl.replace('wss://', 'https://')
-      
+      // This is the same API that `lk dispatch create` uses
       const response = await fetch(`${livekitApiUrl}/twirp/livekit.AgentService/CreateAgentDispatch`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${bearerToken}`,
+          'Authorization': `Basic ${basicAuth}`,
         },
         body: JSON.stringify({
           room: room_name,
