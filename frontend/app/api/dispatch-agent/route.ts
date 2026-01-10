@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { RoomServiceClient } from 'livekit-server-sdk'
+import { AccessToken } from 'livekit-server-sdk'
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,26 +19,33 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
-    const roomService = new RoomServiceClient(
-      livekitUrl.replace('wss://', 'https://'),
-      apiKey,
-      apiSecret
-    )
-
     try {
-      // For Builder agents with agent_name, use LiveKit HTTP API to dispatch
-      // The correct endpoint is CreateAgentDispatch, not CreateAgent
-      const livekitApiUrl = livekitUrl.replace('wss://', 'https://')
+      // Generate Bearer token for API authentication
+      // LiveKit Twirp API requires Bearer token with admin permissions
+      const at = new AccessToken(apiKey, apiSecret, {
+        identity: apiKey, // Use API key as identity for admin tokens
+        name: 'Agent Dispatch Service',
+      })
+      
+      // Grant admin permissions (required for agent dispatch)
+      at.addGrant({
+        roomAdmin: true, // Admin access needed for agent dispatch
+        canPublish: true,
+        canSubscribe: true,
+        canPublishData: true,
+      })
+      
+      const bearerToken = at.toJwt()
       
       // Use LiveKit Twirp API to dispatch agent
       // This is the same API that `lk dispatch create` uses
-      const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64')
+      const livekitApiUrl = livekitUrl.replace('wss://', 'https://')
       
       const response = await fetch(`${livekitApiUrl}/twirp/livekit.AgentService/CreateAgentDispatch`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Basic ${auth}`
+          'Authorization': `Bearer ${bearerToken}`
         },
         body: JSON.stringify({
           room: room_name,
