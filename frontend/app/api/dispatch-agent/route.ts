@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { AccessToken, VideoGrant } from 'livekit-server-sdk'
+import jwt from 'jsonwebtoken'
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,26 +20,20 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // For LiveKit Cloud Twirp API, generate a Bearer token with admin permissions
-      // The token must be a valid JWT signed with the API secret
-      const at = new AccessToken(apiKey, apiSecret, {
-        identity: 'dispatch-service',
-        name: 'Agent Dispatch Service',
-      })
-      
-      // Grant admin permissions with room access for agent dispatch
-      const grant: VideoGrant = {
-        room: room_name,
-        roomAdmin: true,
-        canPublish: true,
-        canSubscribe: true,
-        canPublishData: true,
-        canUpdateOwnMetadata: true,
+      // Generate JWT token with correct format for LiveKit Cloud API
+      // Based on LiveKit's token format: iss=API key, video grants with admin permissions
+      const payload = {
+        iss: apiKey,
+        exp: Math.floor(Date.now() / 1000) + 3600, // Token expires in 1 hour
+        video: {
+          roomCreate: true,
+          roomJoin: true,
+          roomAdmin: true,
+          room: room_name,
+        }
       }
-      at.addGrant(grant)
       
-      // Generate Bearer token (synchronous method, no await needed)
-      const bearerToken = at.toJwt()
+      const bearerToken = jwt.sign(payload, apiSecret, { algorithm: 'HS256' })
       
       // Use LiveKit Twirp API to dispatch agent
       const livekitApiUrl = livekitUrl.replace('wss://', 'https://')
@@ -68,7 +62,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         success: true,
         message: 'Agent dispatched successfully',
-        dispatch_id: result.dispatch_id
+        dispatch_id: result.id || result.dispatch_id
       })
     } catch (error: any) {
       console.error('Agent dispatch error:', error)
