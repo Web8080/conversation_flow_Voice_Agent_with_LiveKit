@@ -106,7 +106,17 @@ export default function VoiceAgentUI() {
           addMessage('agent', `Agent joined the room (${participant.identity})`, 'greeting')
           setCurrentState('greeting')
         } else {
-          addMessage('agent', `User ${participant.identity} joined`)
+          // If participant joins after user connects, it might be the agent (anonymous identity)
+          // Check if participant has audio tracks (agent will publish audio)
+          const hasAudioTracks = Array.from(participant.trackPublications.values()).some(
+            pub => pub.kind === 'audio'
+          )
+          if (hasAudioTracks) {
+            addMessage('agent', `Agent joined the room (${participant.identity})`, 'greeting')
+            setCurrentState('greeting')
+          } else {
+            addMessage('agent', `User ${participant.identity} joined`)
+          }
         }
       })
       
@@ -146,6 +156,9 @@ export default function VoiceAgentUI() {
         Array.from(newRoom.remoteParticipants.keys())
       )
       console.log('Initial participants:', Array.from(initialParticipantIds))
+      
+      // Track if agent has been detected
+      let agentDetected = false
 
       setRoom(newRoom)
       setIsConnected(true)
@@ -163,27 +176,35 @@ export default function VoiceAgentUI() {
         if (dispatchResult.success) {
           addMessage('agent', 'Agent dispatch requested. Waiting for agent to join...')
           
-          // Fallback: Check for new participants after 5 seconds
-          setTimeout(() => {
+          // Monitor for new participants after dispatch (agent should be the only one)
+          const checkForAgent = setInterval(() => {
             const currentParticipants = Array.from(newRoom.remoteParticipants.keys())
             const newParticipants = currentParticipants.filter(
               id => !initialParticipantIds.has(id)
             )
             
-            if (newParticipants.length > 0) {
+            if (newParticipants.length > 0 && !agentDetected) {
               console.log('New participants detected after dispatch:', newParticipants)
               newParticipants.forEach(participantId => {
                 const participant = newRoom.remoteParticipants.get(participantId)
-                if (participant) {
-                  addMessage('agent', `Detected new participant: ${participant.identity} (likely the agent)`, 'greeting')
+                if (participant && !agentDetected) {
+                  // Any new participant after dispatch is likely the agent
+                  agentDetected = true
+                  clearInterval(checkForAgent)
+                  addMessage('agent', `Agent joined the room (${participant.identity})`, 'greeting')
                   setCurrentState('greeting')
                 }
               })
-            } else {
-              console.log('No new participants detected. Current participants:', currentParticipants)
+            }
+          }, 1000) // Check every second
+          
+          // Stop checking after 30 seconds
+          setTimeout(() => {
+            clearInterval(checkForAgent)
+            if (!agentDetected) {
               addMessage('agent', 'Still waiting for agent to join. Check browser console for details.')
             }
-          }, 5000)
+          }, 30000)
         } else {
           addMessage('agent', `Agent dispatch failed: ${dispatchResult.error || 'Unknown error'}`)
         }
