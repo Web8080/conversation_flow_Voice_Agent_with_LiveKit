@@ -88,11 +88,18 @@ export default function VoiceAgentUI() {
 
       newRoom.on(RoomEvent.ParticipantConnected, (participant: RemoteParticipant) => {
         // Log all participants for debugging
-        console.log('Participant connected:', {
+        const participantData = {
           identity: participant.identity,
           name: participant.name,
           metadata: participant.metadata,
-        })
+          trackCount: participant.trackPublications.size,
+          audioTracks: Array.from(participant.trackPublications.values()).filter(p => p.kind === 'audio').length,
+        }
+        console.log('Participant connected:', participantData)
+        
+        // #region debug log
+        fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoiceAgentUI.tsx:89',message:'ParticipantConnected event',data:participantData,timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
         
         // Check if this is the agent (by identity, name, or metadata)
         const isAgent = 
@@ -101,6 +108,10 @@ export default function VoiceAgentUI() {
           participant.name?.toLowerCase().includes('agent') ||
           participant.name?.toLowerCase().includes('appointment') ||
           participant.metadata?.toLowerCase().includes('agent')
+        
+        // #region debug log
+        fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoiceAgentUI.tsx:105',message:'Agent detection check',data:{isAgent,identity:participant.identity,name:participant.name,metadata:participant.metadata},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
         
         if (isAgent) {
           addMessage('agent', `Agent joined the room (${participant.identity})`, 'greeting')
@@ -111,6 +122,9 @@ export default function VoiceAgentUI() {
           const hasAudioTracks = Array.from(participant.trackPublications.values()).some(
             pub => pub.kind === 'audio'
           )
+          // #region debug log
+          fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoiceAgentUI.tsx:115',message:'Checking audio tracks for anonymous participant',data:{hasAudioTracks,identity:participant.identity},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+          // #endregion
           if (hasAudioTracks) {
             addMessage('agent', `Agent joined the room (${participant.identity})`, 'greeting')
             setCurrentState('greeting')
@@ -166,28 +180,50 @@ export default function VoiceAgentUI() {
       
       // Dispatch agent after connecting
       try {
+        // #region debug log
+        fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoiceAgentUI.tsx:168',message:'Calling dispatch API',data:{room_name:roomName,initialParticipantCount:initialParticipantIds.size},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
+        
         const dispatchResponse = await fetch('/api/dispatch-agent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ room_name: roomName }),
         })
         
+        // #region debug log
+        fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoiceAgentUI.tsx:175',message:'Dispatch API response received',data:{status:dispatchResponse.status,ok:dispatchResponse.ok},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+        
         const dispatchResult = await dispatchResponse.json()
+        
+        // #region debug log
+        fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoiceAgentUI.tsx:180',message:'Dispatch result parsed',data:dispatchResult,timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+        
         if (dispatchResult.success) {
           addMessage('agent', 'Agent dispatch requested. Waiting for agent to join...')
           
           // Monitor for new participants after dispatch (agent should be the only one)
+          let checkCount = 0
           const checkForAgent = setInterval(() => {
+            checkCount++
             const currentParticipants = Array.from(newRoom.remoteParticipants.keys())
             const newParticipants = currentParticipants.filter(
               id => !initialParticipantIds.has(id)
             )
+            
+            // #region debug log
+            fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoiceAgentUI.tsx:193',message:'Polling for agent',data:{checkCount,currentParticipantCount:currentParticipants.length,newParticipantCount:newParticipants.length,newParticipants,agentDetected},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+            // #endregion
             
             if (newParticipants.length > 0 && !agentDetected) {
               console.log('New participants detected after dispatch:', newParticipants)
               newParticipants.forEach(participantId => {
                 const participant = newRoom.remoteParticipants.get(participantId)
                 if (participant && !agentDetected) {
+                  // #region debug log
+                  fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoiceAgentUI.tsx:200',message:'New participant detected in polling',data:{participantId,identity:participant.identity,name:participant.name,metadata:participant.metadata},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                  // #endregion
                   // Any new participant after dispatch is likely the agent
                   agentDetected = true
                   clearInterval(checkForAgent)
@@ -202,13 +238,22 @@ export default function VoiceAgentUI() {
           setTimeout(() => {
             clearInterval(checkForAgent)
             if (!agentDetected) {
+              // #region debug log
+              fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoiceAgentUI.tsx:214',message:'Agent detection timeout',data:{checkCount,agentDetected,currentParticipants:Array.from(newRoom.remoteParticipants.keys())},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+              // #endregion
               addMessage('agent', 'Still waiting for agent to join. Check browser console for details.')
             }
           }, 30000)
         } else {
+          // #region debug log
+          fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoiceAgentUI.tsx:220',message:'Dispatch failed',data:dispatchResult,timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+          // #endregion
           addMessage('agent', `Agent dispatch failed: ${dispatchResult.error || 'Unknown error'}`)
         }
       } catch (error) {
+        // #region debug log
+        fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoiceAgentUI.tsx:225',message:'Dispatch exception',data:{error:error instanceof Error ? error.message : String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         console.error('Failed to dispatch agent:', error)
         addMessage('agent', 'Failed to dispatch agent. Agent may need to be configured in dashboard.')
       }

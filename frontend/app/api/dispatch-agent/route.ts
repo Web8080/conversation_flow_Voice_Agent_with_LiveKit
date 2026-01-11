@@ -5,6 +5,10 @@ export async function POST(request: NextRequest) {
   try {
     const { room_name } = await request.json()
     
+    // #region debug log
+    fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dispatch-agent/route.ts:6',message:'Dispatch API called',data:{room_name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    
     if (!room_name) {
       return NextResponse.json({ error: 'Room name required' }, { status: 400 })
     }
@@ -12,6 +16,10 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.LIVEKIT_API_KEY
     const apiSecret = process.env.LIVEKIT_API_SECRET
     const livekitUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL
+
+    // #region debug log
+    fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dispatch-agent/route.ts:18',message:'Env vars check',data:{hasApiKey:!!apiKey,hasApiSecret:!!apiSecret,hasLivekitUrl:!!livekitUrl,livekitUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
 
     if (!apiKey || !apiSecret || !livekitUrl) {
       return NextResponse.json({ 
@@ -37,21 +45,34 @@ export async function POST(request: NextRequest) {
       
       // Use LiveKit Twirp API to dispatch agent
       const livekitApiUrl = livekitUrl.replace('wss://', 'https://')
+      const dispatchUrl = `${livekitApiUrl}/twirp/livekit.AgentService/CreateAgentDispatch`
+      const dispatchBody = {
+        room: room_name,
+        agent_name: 'appointment-scheduler',
+      }
       
-      const response = await fetch(`${livekitApiUrl}/twirp/livekit.AgentService/CreateAgentDispatch`, {
+      // #region debug log
+      fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dispatch-agent/route.ts:50',message:'Before LiveKit API call',data:{dispatchUrl,dispatchBody,hasBearerToken:!!bearerToken},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+      
+      const response = await fetch(dispatchUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${bearerToken}`,
         },
-        body: JSON.stringify({
-          room: room_name,
-          agent_name: 'appointment-scheduler',
-        })
+        body: JSON.stringify(dispatchBody)
       })
 
+      // #region debug log
+      fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dispatch-agent/route.ts:57',message:'LiveKit API response received',data:{status:response.status,statusText:response.statusText,ok:response.ok,headers:Object.fromEntries(response.headers.entries())},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+      
       if (!response.ok) {
         const errorText = await response.text()
+        // #region debug log
+        fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dispatch-agent/route.ts:62',message:'Dispatch API error',data:{status:response.status,errorText},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         console.error('Dispatch API error:', response.status, errorText)
         throw new Error(`Failed to dispatch agent: ${response.status} ${errorText}`)
       }
@@ -79,6 +100,10 @@ export async function POST(request: NextRequest) {
           }
         }
       }
+      
+      // #region debug log
+      fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dispatch-agent/route.ts:85',message:'Dispatch result parsed',data:{result,contentType},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       
       console.log('Agent dispatched successfully:', result)
 
