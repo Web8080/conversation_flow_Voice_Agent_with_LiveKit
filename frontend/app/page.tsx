@@ -1,6 +1,6 @@
 'use client'
 
-import VoiceAgentUI from '@/components/VoiceAgentUI'
+import VoiceAgentUI from '../components/VoiceAgentUI'
 
 export default function Home() {
   return (
