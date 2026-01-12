@@ -41,13 +41,88 @@ class OpenAISTTService(STTService):
 
 class GoogleSTTService(STTService):
     def __init__(self):
-        if not settings.google_api_key and not settings.google_application_credentials:
-            raise ValueError("Google Cloud credentials not configured")
-        logger.info("Initialized Google STT service")
+        # Google Cloud Speech requires service account credentials, not just API key
+        # GOOGLE_API_KEY works for Gemini, but Speech/TTS need GOOGLE_APPLICATION_CREDENTIALS
+        import os
+        import json
+        import tempfile
+        
+        # Handle different credential formats for LiveKit Cloud deployment
+        credentials_path = None
+        
+        # Option 1: JSON content as environment variable (for LiveKit Cloud)
+        credentials_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+        if credentials_json:
+            try:
+                # Write JSON content to temp file
+                temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False)
+                json.dump(json.loads(credentials_json), temp_file)
+                temp_file.close()
+                credentials_path = temp_file.name
+                os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
+                logger.info("Using Google credentials from GOOGLE_APPLICATION_CREDENTIALS_JSON")
+            except Exception as e:
+                logger.error("Failed to parse GOOGLE_APPLICATION_CREDENTIALS_JSON", error=str(e))
+        
+        # Option 2: Base64 encoded JSON (for LiveKit Cloud)
+        if not credentials_path:
+            credentials_base64 = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_BASE64")
+            if credentials_base64:
+                try:
+                    import base64
+                    json_content = base64.b64decode(credentials_base64).decode('utf-8')
+                    temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False)
+                    temp_file.write(json_content)
+                    temp_file.close()
+                    credentials_path = temp_file.name
+                    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
+                    logger.info("Using Google credentials from GOOGLE_APPLICATION_CREDENTIALS_BASE64")
+                except Exception as e:
+                    logger.error("Failed to decode GOOGLE_APPLICATION_CREDENTIALS_BASE64", error=str(e))
+        
+        # Option 3: File path (for local development)
+        if not credentials_path:
+            if settings.google_application_credentials:
+                if os.path.exists(settings.google_application_credentials):
+                    credentials_path = settings.google_application_credentials
+                    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
+                    logger.info("Using Google credentials from file path")
+                else:
+                    logger.warning("Google credentials file not found", path=settings.google_application_credentials)
+        
+        # Option 4: Application Default Credentials (if already set up via gcloud)
+        if not credentials_path and not os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
+            # Try to use ADC - will work if user ran 'gcloud auth application-default login'
+            logger.info("Attempting to use Application Default Credentials")
+        
+        # Final check
+        if not credentials_path and not os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
+            raise ValueError(
+                "Google Cloud Speech requires service account credentials. "
+                "Set one of:\n"
+                "  - GOOGLE_APPLICATION_CREDENTIALS (path to JSON file)\n"
+                "  - GOOGLE_APPLICATION_CREDENTIALS_JSON (JSON content as string)\n"
+                "  - GOOGLE_APPLICATION_CREDENTIALS_BASE64 (base64 encoded JSON)\n"
+                "Or run: gcloud auth application-default login\n"
+                "Get service account: https://console.cloud.google.com/iam-admin/serviceaccounts"
+            )
+        
+        self.openai_fallback = None
+        # Initialize OpenAI fallback if available
+        if settings.openai_api_key:
+            try:
+                self.openai_fallback = OpenAISTTService()
+                logger.info("Initialized Google STT service with OpenAI fallback")
+            except Exception:
+                logger.info("Initialized Google STT service (no fallback)")
+        else:
+            logger.info("Initialized Google STT service (no fallback)")
     
     async def transcribe(self, audio_data: bytes, language: str = "en") -> Optional[str]:
         try:
             from google.cloud import speech
+            
+            # SpeechClient will use GOOGLE_APPLICATION_CREDENTIALS environment variable
             client = speech.SpeechClient()
             
             config = speech.RecognitionConfig(
@@ -65,16 +140,56 @@ class GoogleSTTService(STTService):
                 return text.strip()
             return None
         except Exception as e:
-            logger.error("Google STT transcription failed", error=str(e))
+            logger.warning("Google STT transcription failed, trying OpenAI fallback", error=str(e))
+            # Try OpenAI fallback if available
+            if self.openai_fallback:
+                try:
+                    return await self.openai_fallback.transcribe(audio_data, language)
+                except Exception as fallback_error:
+                    logger.error("OpenAI STT fallback also failed", error=str(fallback_error))
             return None
 
 
 def create_stt_service() -> STTService:
-    if settings.stt_provider == "openai":
-        return OpenAISTTService()
-    elif settings.stt_provider == "google":
-        return GoogleSTTService()
-    else:
-        logger.warning("Unknown STT provider, defaulting to OpenAI", provider=settings.stt_provider)
-        return OpenAISTTService()
+    """
+    Creates STT service with fallback strategy:
+    Primary: Google STT (if credentials configured)
+    Fallback: OpenAI (if API key configured)
+    """
+    providers = []
+    
+    # Google STT is primary (requires service account credentials, not just API key)
+    # Check for service account credentials (file path, JSON string, or base64)
+    import os
+    has_google_creds = (
+        settings.google_application_credentials or
+        os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON") or
+        os.getenv("GOOGLE_APPLICATION_CREDENTIALS_BASE64") or
+        os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    )
+    if has_google_creds:
+        try:
+            providers.append(("google", GoogleSTTService()))
+        except Exception as e:
+            logger.warning("Google STT not available", error=str(e))
+    
+    # OpenAI STT is fallback (high quality, reliable)
+    if settings.openai_api_key:
+        try:
+            providers.append(("openai", OpenAISTTService()))
+        except Exception as e:
+            logger.warning("OpenAI STT not available", error=str(e))
+    
+    if not providers:
+        raise ValueError("No STT provider configured. Please set up at least Google or OpenAI STT.")
+    
+    # If only one provider, return it directly
+    if len(providers) == 1:
+        logger.info("Using STT provider", provider=providers[0][0])
+        return providers[0][1]
+    
+    # Multiple providers: return primary (Google) with manual fallback in service
+    # For now, return Google as primary - fallback will happen at service level
+    logger.info("Using STT provider", provider=providers[0][0], fallback=providers[1][0] if len(providers) > 1 else None)
+    return providers[0][1]  # Return Google, OpenAI can be fallback if Google fails
 

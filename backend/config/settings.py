@@ -23,10 +23,13 @@ class Settings(BaseSettings):
     google_application_credentials: Optional[str] = None
     google_api_key: Optional[str] = None
     
+    # Replicate Configuration (for F5-TTS)
+    replicate_api_key: Optional[str] = None
+    
     # Service Selection
-    llm_provider: str = "openai"  # openai, ollama, groq (openai is primary, ollama is fallback)
-    stt_provider: str = "openai"  # openai, google
-    tts_provider: str = "openai"  # openai, google
+    llm_provider: str = "google"  # google, openai, ollama, groq (google is primary)
+    stt_provider: str = "google"  # google, openai
+    tts_provider: str = "google"  # google, openai
     
     # Application Configuration
     log_level: str = "INFO"

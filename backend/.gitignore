@@ -16,3 +16,6 @@ build/
 htmlcov/
 *.log
 
+
+# Google Cloud Service Account Credentials
+google-credentials.json

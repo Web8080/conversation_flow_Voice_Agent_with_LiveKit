@@ -75,37 +75,133 @@ class Stage1VoiceAgent:
             logger.error("Failed to initialize agent", error=str(e))
             raise
     
-    async def process_audio_stream(self, track: rtc.RemoteAudioTrack):
-        """Process incoming audio stream from user"""
-        logger.info("Processing audio stream from participant")
+    async def process_audio_stream(self, track: rtc.Track):
+        """Process incoming audio stream from user using AudioStream"""
+        logger.info("Processing audio stream from participant", track_type=type(track).__name__)
         
-        async for audio_frame in track:
-            try:
-                self.audio_buffer.append(audio_frame)
-                current_time = asyncio.get_event_loop().time()
+        try:
+            # For RemoteAudioTrack, we need to use AudioStream wrapper
+            if isinstance(track, rtc.RemoteAudioTrack):
+                # #region debug log
+                logger.info("DEBUG: Creating AudioStream", track_type=type(track).__name__, hypothesis="F")
+                # #endregion
                 
-                if self.last_audio_time is None:
-                    self.last_audio_time = current_time
+                try:
+                    # Create AudioStream from RemoteAudioTrack
+                    audio_stream = rtc.AudioStream(track)
+                    # #region debug log
+                    logger.info("DEBUG: AudioStream created", has_audio_stream=True, hypothesis="F")
+                    # #endregion
+                except AttributeError as e:
+                    # #region debug log
+                    logger.error("DEBUG: AudioStream not available", error=str(e), hypothesis="F")
+                    # #endregion
+                    logger.error("AudioStream not available in this SDK version", error=str(e))
+                    return
+                except Exception as e:
+                    # #region debug log
+                    logger.error("DEBUG: Failed to create AudioStream", error=str(e), hypothesis="F")
+                    # #endregion
+                    logger.error("Failed to create AudioStream", error=str(e))
+                    return
                 
-                # Process buffer every buffer_duration seconds
-                if current_time - self.last_audio_time >= self.buffer_duration:
-                    await self.process_audio_buffer()
-                    self.audio_buffer = []
-                    self.last_audio_time = current_time
-                    
-            except Exception as e:
-                logger.error("Error processing audio frame", error=str(e))
+                try:
+                    frame_count = 0
+                    # Iterate directly over audio frames from the stream
+                    async for audio_frame in audio_stream:
+                        frame_count += 1
+                        # #region debug log
+                        if frame_count % 100 == 0:  # Log every 100 frames to avoid spam
+                            logger.info("DEBUG: Processing audio frame", frame_count=frame_count, hypothesis="F")
+                        # #endregion
+                        
+                        if isinstance(audio_frame, rtc.AudioFrame):
+                            try:
+                                self.audio_buffer.append(audio_frame)
+                                current_time = asyncio.get_event_loop().time()
+                                
+                                if self.last_audio_time is None:
+                                    self.last_audio_time = current_time
+                                
+                                # Process buffer every buffer_duration seconds
+                                if current_time - self.last_audio_time >= self.buffer_duration:
+                                    # #region debug log
+                                    logger.info("DEBUG: Buffer ready for processing", buffer_size=len(self.audio_buffer), hypothesis="F")
+                                    # #endregion
+                                    # Process buffer (don't await here to avoid blocking)
+                                    asyncio.create_task(self.process_audio_buffer())
+                                    self.audio_buffer = []
+                                    self.last_audio_time = current_time
+                                    
+                            except Exception as e:
+                                logger.error("Error processing audio frame", error=str(e))
+                    # #region debug log
+                    logger.info("DEBUG: Audio stream iteration ended", total_frames=frame_count, hypothesis="F")
+                    # #endregion
+                except AttributeError as e:
+                    # #region debug log
+                    logger.error("DEBUG: AudioStream not async iterable", error=str(e), hypothesis="F")
+                    # #endregion
+                    logger.error("AudioStream is not async iterable", error=str(e))
+                except Exception as e:
+                    # #region debug log
+                    logger.error("DEBUG: Error iterating AudioStream", error=str(e), error_type=type(e).__name__, hypothesis="F")
+                    # #endregion
+                    logger.error("Error iterating audio stream", error=str(e))
+                finally:
+                    # Close the audio stream when done
+                    try:
+                        if hasattr(audio_stream, 'aclose'):
+                            await audio_stream.aclose()
+                        elif hasattr(audio_stream, 'close'):
+                            audio_stream.close()
+                    except Exception as e:
+                        logger.warning("Error closing audio stream", error=str(e))
+            else:
+                # For other track types, try direct async iteration
+                async for frame in track:
+                    if isinstance(frame, rtc.AudioFrame):
+                        try:
+                            self.audio_buffer.append(frame)
+                            current_time = asyncio.get_event_loop().time()
+                            
+                            if self.last_audio_time is None:
+                                self.last_audio_time = current_time
+                            
+                            # Process buffer every buffer_duration seconds
+                            if current_time - self.last_audio_time >= self.buffer_duration:
+                                asyncio.create_task(self.process_audio_buffer())
+                                self.audio_buffer = []
+                                self.last_audio_time = current_time
+                                
+                        except Exception as e:
+                            logger.error("Error processing audio frame", error=str(e))
+        except AttributeError as e:
+            logger.error("Track does not support audio processing", error=str(e), track_type=type(track).__name__)
+        except Exception as e:
+            logger.error("Error processing audio stream", error=str(e), track_type=type(track).__name__)
     
     async def process_audio_buffer(self):
         """Process buffered audio frames: STT → LLM → TTS"""
         if not self.audio_buffer:
+            # #region debug log
+            logger.debug("DEBUG: Empty audio buffer, skipping", hypothesis="F")
+            # #endregion
             return
+        
+        # #region debug log
+        logger.info("DEBUG: Processing audio buffer", buffer_size=len(self.audio_buffer), hypothesis="F")
+        # #endregion
         
         try:
             # Combine audio frames
             combined_audio = self.audio_buffer[0].data.tobytes()
             for frame in self.audio_buffer[1:]:
                 combined_audio += frame.data.tobytes()
+            
+            # #region debug log
+            logger.info("DEBUG: Combined audio data", audio_size=len(combined_audio), hypothesis="F")
+            # #endregion
             
             # Step 1: Speech-to-Text
             user_text = await self.stt_service.transcribe(combined_audio)
@@ -183,9 +279,22 @@ class Stage1VoiceAgent:
 
 async def entrypoint(ctx: JobContext):
     """Main entrypoint for Stage 1 agent"""
+    # #region debug log
+    logger.info("DEBUG: Agent entrypoint called", 
+                room=ctx.room.name,
+                hypothesis="D")
+    # #endregion
+    
     logger.info("Stage 1 agent started", room=ctx.room.name)
     
     await ctx.connect(auto_subscribe=agents.AutoSubscribe.AUDIO_ONLY)
+    
+    # #region debug log
+    logger.info("DEBUG: Agent connected to room", 
+                room=ctx.room.name,
+                local_identity=ctx.room.local_participant.identity,
+                hypothesis="D")
+    # #endregion
     
     try:
         agent = Stage1VoiceAgent(ctx)
@@ -193,26 +302,89 @@ async def entrypoint(ctx: JobContext):
         
         logger.info("Agent initialized, waiting for participants...")
         
-        async def on_track_subscribed(
+        def on_track_subscribed(
             track: rtc.Track, 
             publication: rtc.TrackPublication, 
             participant: rtc.RemoteParticipant
         ):
-            if track.kind == rtc.TrackKind.KIND_AUDIO and participant.identity != "agent":
+            # Synchronous callback wrapper - use asyncio.create_task inside
+            # #region debug log
+            logger.info("DEBUG: Track subscribed event", 
+                       track_kind=track.kind, 
+                       participant_identity=participant.identity,
+                       track_type=type(track).__name__,
+                       hypothesis="G")
+            # #endregion
+            
+            # Check if this is an audio track from a non-agent participant
+            is_audio = track.kind == rtc.TrackKind.KIND_AUDIO
+            is_not_agent = participant.identity != "agent" and not participant.identity.startswith("agent-")
+            
+            # #region debug log
+            logger.info("DEBUG: Track subscription check", 
+                       is_audio=is_audio,
+                       is_not_agent=is_not_agent,
+                       participant_identity=participant.identity,
+                       hypothesis="G")
+            # #endregion
+            
+            if is_audio and is_not_agent:
                 logger.info("Audio track subscribed", participant=participant.identity)
-                if isinstance(track, rtc.RemoteAudioTrack):
-                    asyncio.create_task(agent.process_audio_stream(track))
+                # process_audio_stream is async - wrap in create_task
+                # Works with any Track type that supports async iteration
+                asyncio.create_task(agent.process_audio_stream(track))
+            else:
+                # #region debug log
+                logger.debug("DEBUG: Skipping track", 
+                           reason="not_audio" if not is_audio else "is_agent",
+                           hypothesis="G")
+                # #endregion
         
         ctx.room.on("track_subscribed", on_track_subscribed)
         
         # Handle existing tracks
-        for participant in ctx.room.remote_participants.values():
-            for publication in participant.track_publications.values():
-                if publication.track and publication.kind == rtc.TrackKind.KIND_AUDIO:
-                    if isinstance(publication.track, rtc.RemoteAudioTrack):
-                        asyncio.create_task(agent.process_audio_stream(publication.track))
+        # #region debug log
+        logger.info("DEBUG: Checking existing tracks", 
+                   participant_count=len(ctx.room.remote_participants),
+                   hypothesis="G")
+        # #endregion
         
-        await ctx.wait_until_disconnected()
+        for participant in ctx.room.remote_participants.values():
+            # #region debug log
+            logger.info("DEBUG: Checking participant tracks", 
+                       participant_identity=participant.identity,
+                       track_count=len(participant.track_publications),
+                       hypothesis="G")
+            # #endregion
+            
+            for publication in participant.track_publications.values():
+                # #region debug log
+                logger.info("DEBUG: Checking publication", 
+                           publication_kind=publication.kind,
+                           has_track=publication.track is not None,
+                           hypothesis="G")
+                # #endregion
+                
+                if publication.track and publication.kind == rtc.TrackKind.KIND_AUDIO:
+                    # #region debug log
+                    logger.info("DEBUG: Processing existing audio track", 
+                               participant_identity=participant.identity,
+                               hypothesis="G")
+                    # #endregion
+                    # Process any audio track (works with RemoteAudioTrack and others)
+                    asyncio.create_task(agent.process_audio_stream(publication.track))
+        
+        # Wait for room to disconnect
+        # Use room's disconnect event
+        disconnect_event = asyncio.Event()
+        
+        def on_disconnected():
+            disconnect_event.set()
+        
+        ctx.room.on("disconnected", on_disconnected)
+        
+        # Wait until disconnected
+        await disconnect_event.wait()
         logger.info("Agent disconnected")
         
     except Exception as e:

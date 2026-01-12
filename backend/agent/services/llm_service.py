@@ -100,6 +100,62 @@ class GroqLLMService(LLMService):
             return None
 
 
+class GoogleLLMService(LLMService):
+    def __init__(self):
+        if not settings.google_api_key:
+            raise ValueError("Google API key not configured")
+        try:
+            import google.generativeai as genai
+            genai.configure(api_key=settings.google_api_key)
+            self.model = genai.GenerativeModel("gemini-1.5-flash")
+            logger.info("Initialized Google Gemini LLM service", model="gemini-1.5-flash")
+        except ImportError:
+            raise ValueError("google-generativeai not installed. Run: pip install google-generativeai")
+    
+    async def generate_response(self, user_text: str, context: Optional[Dict[str, Any]] = None) -> Optional[str]:
+        try:
+            import google.generativeai as genai
+            
+            # Build prompt with system message and history
+            prompt_parts = []
+            
+            if context:
+                system_prompt = context.get("system_prompt", "You are a helpful voice assistant.")
+                prompt_parts.append(system_prompt)
+                
+                conversation_history = context.get("history", [])
+                for msg in conversation_history:
+                    role = msg.get("role", "user")
+                    content = msg.get("content", "")
+                    if role == "system":
+                        prompt_parts.append(f"System: {content}")
+                    elif role == "user":
+                        prompt_parts.append(f"User: {content}")
+                    elif role == "assistant":
+                        prompt_parts.append(f"Assistant: {content}")
+            
+            prompt_parts.append(f"User: {user_text}")
+            prompt = "\n".join(prompt_parts)
+            
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None,
+                lambda: self.model.generate_content(
+                    prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        temperature=settings.llm_temperature,
+                        max_output_tokens=settings.llm_max_tokens,
+                    )
+                )
+            )
+            text = response.text
+            logger.info("Google Gemini LLM response generated", response_length=len(text))
+            return text.strip()
+        except Exception as e:
+            logger.error("Google Gemini LLM request failed", error=str(e))
+            return None
+
+
 class OpenAILLMService(LLMService):
     def __init__(self):
         if not settings.openai_api_key:
@@ -142,13 +198,16 @@ class OpenAILLMService(LLMService):
 def create_llm_service() -> LLMService:
     """
     Creates LLM service with fallback strategy:
-    Primary: OpenAI (if API key configured)
-    Fallback: Ollama (local, free)
-    Optional: Groq (if API key configured and OpenAI fails)
+    Primary: Google Gemini (if API key configured)
+    Fallback: OpenAI, Ollama, Groq
     """
     providers = []
     
-    # OpenAI is primary (highest quality, production-ready)
+    # Google Gemini is primary (if API key configured)
+    if settings.google_api_key:
+        providers.append(("google", GoogleLLMService))
+    
+    # OpenAI is fallback (high quality, production-ready)
     if settings.openai_api_key:
         providers.append(("openai", OpenAILLMService))
     
@@ -164,9 +223,9 @@ def create_llm_service() -> LLMService:
         providers.append(("groq", GroqLLMService))
     
     if not providers:
-        raise ValueError("No LLM provider configured. Please set up at least OpenAI or Ollama.")
+        raise ValueError("No LLM provider configured. Please set up at least Google, OpenAI, or Ollama.")
     
-    # Use primary provider (OpenAI if available, otherwise first available)
+    # Use primary provider (Google if available, otherwise first available)
     primary_provider_name, primary_provider_class = providers[0]
     logger.info("Using primary LLM provider", provider=primary_provider_name, fallbacks=[p[0] for p in providers[1:]])
     

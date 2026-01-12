@@ -44,12 +44,24 @@ export async function POST(request: NextRequest) {
       const bearerToken = jwt.sign(payload, apiSecret, { algorithm: 'HS256' })
       
       // Use LiveKit Twirp API to dispatch agent
+      // CLI dispatch uses agent_name (not agent_id)
       const livekitApiUrl = livekitUrl.replace('wss://', 'https://')
       const dispatchUrl = `${livekitApiUrl}/twirp/livekit.AgentService/CreateAgentDispatch`
+      
+      // Use agent_name (CLI agents are registered with agent_name)
+      const agentName = 'appointment-scheduler'
       const dispatchBody = {
         room: room_name,
-        agent_name: 'appointment-scheduler',
+        agent_name: agentName, // Use agent_name (not agent_id)
       }
+      
+      // #region debug log
+      fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dispatch-agent/route.ts:55',message:'Using agent_name for dispatch',data:{agentName,dispatchBody},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+      // #endregion
+      
+      // #region debug log
+      fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dispatch-agent/route.ts:52',message:'Dispatch body prepared',data:{dispatchBody,dispatchUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       
       // #region debug log
       fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dispatch-agent/route.ts:50',message:'Before LiveKit API call',data:{dispatchUrl,dispatchBody,hasBearerToken:!!bearerToken},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});

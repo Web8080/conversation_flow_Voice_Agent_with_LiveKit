@@ -119,23 +119,57 @@ This document outlines all external services required for the Voice Agent system
 ---
 
 ### 5. Google Cloud Platform (OPTIONAL - Alternative STT/TTS)
-**Purpose**: Alternative STT/TTS provider
+**Purpose**: Alternative STT/TTS provider with generous free tier
 
 **Setup Steps**:
-1. Go to https://console.cloud.google.com/
-2. Create a new project
-3. Enable "Cloud Speech-to-Text API"
-4. Enable "Cloud Text-to-Speech API"
-5. Create a service account
-6. Generate JSON key file
-7. Download and save the key file securely
+1. **Create Account**: Go to https://cloud.google.com/
+   - Click "Get started for free"
+   - Sign in with Google account
+   - Complete billing setup (credit card required, but free tier won't charge)
+   - Google gives $300 free credit for 90 days
+
+2. **Create Project**: Go to https://console.cloud.google.com/
+   - Click "Select a project" → "New Project"
+   - Name: "VoiceAgent-TTS" (or any name)
+   - Click "Create"
+
+3. **Enable APIs**:
+   - Go to https://console.cloud.google.com/apis/library
+   - Search and enable "Cloud Text-to-Speech API" (for TTS fallback)
+   - (Optional) Enable "Cloud Speech-to-Text API" (for STT fallback)
+
+4. **Get Credentials** (choose one method):
+
+   **Method A: API Key (EASIEST - for testing)**
+   - Go to https://console.cloud.google.com/apis/credentials
+   - Click "Create Credentials" → "API Key"
+   - Copy the API key
+   - (Optional) Restrict key to "Cloud Text-to-Speech API" for security
+
+   **Method B: Service Account (RECOMMENDED - for production)**
+   - Go to https://console.cloud.google.com/iam-admin/serviceaccounts
+   - Click "Create Service Account"
+   - Name: "voice-agent-tts"
+   - Role: "Cloud Text-to-Speech API User"
+   - Go to "Keys" tab → "Add Key" → "Create new key" → Choose "JSON"
+   - Download the JSON file (keep it secure!)
 
 **Configuration**:
-- `GOOGLE_APPLICATION_CREDENTIALS`: Path to JSON key file
-- Or use `GOOGLE_API_KEY` for simpler setup
+- **Method A**: `GOOGLE_API_KEY=your_api_key_here`
+- **Method B**: `GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json`
 
-**Free Tier**: $300 credit for new accounts
-**Documentation**: https://cloud.google.com/speech-to-text/docs
+**Pricing**:
+- **Free Tier**: 
+  - Standard voices: 4 million characters/month FREE
+  - WaveNet/Neural2 voices: 1 million characters/month FREE
+- **Paid** (after free tier):
+  - Standard: $4 per 1M characters
+  - WaveNet/Neural2: $16 per 1M characters
+
+**Free Tier**: $300 credit for new accounts + 4M chars/month (Standard voices)
+**Documentation**: 
+- Text-to-Speech: https://cloud.google.com/text-to-speech/docs
+- Speech-to-Text: https://cloud.google.com/speech-to-text/docs
 
 ---
 
