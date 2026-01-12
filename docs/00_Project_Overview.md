@@ -6,7 +6,7 @@ This repository contains the complete documentation, design, and implementation 
 
 ## Quick Start - Read These First
 
-1. **`VOICE_AGENT_DESIGN.md`** **START HERE** - Clean, presentation-ready system design
+1. **`VOICE_AGENT_DESIGN.md`** **START HERE** - System design document
 2. **`EXECUTIVE_APPROACH.md`** - Professional execution strategy and what they're really testing
 3. **`CURSOR_AI_PROMPTS.md`** - Implementation prompts for incremental development
 
@@ -27,7 +27,6 @@ This repository contains the complete documentation, design, and implementation 
 **`03_Project_Presentation_Thought_Process.md`**
 - Detailed thought process narrative
 - Design decisions and tradeoffs explained
-- Use this to prepare your verbal presentation
 
 ### Detailed Reference Documents
 
@@ -107,7 +106,7 @@ Extend the agent with state machine-based conversation flow:
 4. Test and deploy Stage 1
 5. Design and implement Stage 2 state machine
 6. Test and deploy Stage 2
-7. Prepare presentation using thought process document
+7. Review design and implementation approach
 
 ## Important Notes
 
