@@ -357,7 +357,7 @@ variant = manager.get_variant_for_user("prompt_v2_vs_v1", user_id)
 
 ---
 
-## Interview Talking Points
+## Key Talking Points
 
 When presenting this ML approach:
 

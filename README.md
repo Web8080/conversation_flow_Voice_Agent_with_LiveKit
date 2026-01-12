@@ -198,17 +198,17 @@ See `docs/SETUP_AND_RUN.md` for detailed deployment instructions.
 3. **Run Security Scan**: Execute security scripts
 4. **Test Locally**: Use `./launch.sh`
 5. **Review Design**: Check `uiux/` for UI/UX
-6. **Prepare Presentation**: Review `docs/VOICE_AGENT_DESIGN.md`
+6. **Review Design**: Check `docs/VOICE_AGENT_DESIGN.md`
 
 ## Contributing
 
-This is a technical exercise submission. For questions or improvements, see documentation.
+For questions or improvements, see documentation.
 
 ## License
 
-This project is a technical exercise implementation.
+This project is open source.
 
 ---
 
 **Built with** clarity, structure, and correctness in mind. 
-**Designed for** production readiness and professional presentation.
+**Designed for** production readiness and scalability.

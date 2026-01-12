@@ -2,7 +2,7 @@
 
 ## Project Structure
 
-This repository contains the complete documentation, design, and implementation plan for a Python-based voice agent using LiveKit. The project is organized into two stages, as specified in the technical exercise requirements.
+This repository contains the complete documentation, design, and implementation for a Python-based voice agent using LiveKit. The project is organized into two stages.
 
 ## Quick Start - Read These First
 

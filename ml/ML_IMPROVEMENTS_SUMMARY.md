@@ -2,7 +2,7 @@
 
 ## What Changed
 
-A senior ML/AI scientist would focus on **evaluation, experimentation, cost optimization, and production ML practices**. This document summarizes the improvements made to align with this approach.
+we would focus on **evaluation, experimentation, cost optimization, and production ML practices**. This document summarizes the improvements made to align with this approach.
 
 ---
 
@@ -144,7 +144,7 @@ A senior ML/AI scientist would focus on **evaluation, experimentation, cost opti
 **Why it matters:**
 - Demonstrates senior ML thinking
 - Shows systematic approach
-- Provides interview talking points
+- Provides technical discussion points
 
 ---
 
@@ -212,9 +212,9 @@ ml/
 
 ---
 
-## Interview Talking Points
+## Technical Discussion Points
 
-When presenting these improvements:
+When discussing these improvements:
 
 1. **"I focused on evaluation first"**
  - Can't improve what you don't measure

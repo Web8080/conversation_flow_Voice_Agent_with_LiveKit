@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This document outlines how a senior ML/AI scientist would approach building and optimizing this voice agent system, with emphasis on **evaluation, experimentation, and production ML practices**.
+This document outlines how i would approach building and optimizing this voice agent system, with emphasis on **evaluation, experimentation, and production ML practices**.
 
 ---
 
@@ -527,7 +527,7 @@ responses = await llm.batch_generate(batched_requests)
 
 ---
 
-## 11. Interview Talking Points
+## 11. Talking Points
 
 When presenting this approach:
 

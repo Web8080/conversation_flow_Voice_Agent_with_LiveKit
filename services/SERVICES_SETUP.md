@@ -27,36 +27,48 @@ This document outlines all external services required for the Voice Agent system
 
 ---
 
-### 2. OpenAI API (REQUIRED - Primary LLM/TTS/STT)
+### 2. Google Cloud Services (REQUIRED - Primary STT/TTS/LLM)
 **Purpose**: 
-- Speech-to-Text (Whisper)
-- Large Language Model (GPT-4o-mini recommended for cost)
-- Text-to-Speech (TTS)
+- Speech-to-Text (Google Cloud Speech-to-Text)
+- Large Language Model (Google Gemini)
+- Text-to-Speech (Google Cloud TTS)
 
 **Setup Steps**:
-1. Go to https://platform.openai.com/
-2. Sign up or log in
-3. Navigate to "API Keys" section
-4. Click "Create new secret key"
-5. Copy the key immediately (you won't see it again)
-6. Add payment method (required for API usage, but GPT-4o-mini is very cheap)
+1. Go to https://cloud.google.com/
+2. Sign up for free account (get $300 free credit)
+3. Create a new project
+4. Enable APIs:
+   - Cloud Speech-to-Text API
+   - Cloud Text-to-Speech API
+   - Generative AI API (for Gemini)
+5. Create Service Account:
+   - Go to IAM & Admin → Service Accounts
+   - Create service account with "Editor" role
+   - Download JSON credentials file
+6. Configure credentials (see docs/GOOGLE_CLOUD_SETUP.md for details)
 
-**API Keys Needed**:
-- `OPENAI_API_KEY` (used for all OpenAI services)
+**API Keys/Credentials Needed**:
+- `GOOGLE_API_KEY` (for Gemini API)
+- `GOOGLE_APPLICATION_CREDENTIALS` (path to service account JSON file)
+- OR `GOOGLE_APPLICATION_CREDENTIALS_JSON` (JSON content as string)
+- OR `GOOGLE_APPLICATION_CREDENTIALS_BASE64` (base64 encoded JSON)
 
 **Models Used**:
-- STT: `whisper-1`
-- LLM: `gpt-4o-mini` (fallback to `gpt-3.5-turbo` if needed)
-- TTS: `tts-1` or `tts-1-hd` (voice options: `alloy`, `echo`, `fable`, `onyx`, `nova`, `shimmer`)
+- STT: Google Cloud Speech-to-Text
+- LLM: `gemini-1.5-flash` (primary)
+- TTS: Google Cloud Text-to-Speech (Standard and Neural2 voices)
 
 **Pricing** (approximate):
-- Whisper: $0.006 per minute
-- GPT-4o-mini: ~$0.15 per 1M input tokens
-- TTS: $15 per 1M characters
+- Speech-to-Text: $0.006 per 15 seconds
+- Gemini: $0.075 per 1M input tokens (Flash model)
+- TTS: $4 per 1M characters (Standard), $16 per 1M (Neural2)
 
-**Free Credits**: New accounts get $5 free credit
+**Free Credits**: $300 free credit for new accounts + generous free tiers
 
-**Documentation**: https://platform.openai.com/docs/
+**Documentation**: 
+- Speech-to-Text: https://cloud.google.com/speech-to-text/docs
+- Text-to-Speech: https://cloud.google.com/text-to-speech/docs
+- Gemini: https://ai.google.dev/docs
 
 ---
 
@@ -178,17 +190,18 @@ This document outlines all external services required for the Voice Agent system
 The system uses this fallback order:
 
 ### LLM Service:
-1. **Primary**: Ollama (local, free)
-2. **Fallback 1**: Groq (if configured and Ollama fails)
-3. **Fallback 2**: OpenAI GPT (always available if API key set)
+1. **Primary**: Google Gemini (gemini-1.5-flash)
+2. **Fallback 1**: OpenAI GPT (if configured)
+3. **Fallback 2**: Ollama (local, if available)
+4. **Fallback 3**: Groq (if configured)
 
 ### STT Service:
-1. **Primary**: OpenAI Whisper
-2. **Fallback**: Google Cloud STT (if configured)
+1. **Primary**: Google Cloud Speech-to-Text
+2. **Fallback**: OpenAI Whisper (if configured)
 
 ### TTS Service:
-1. **Primary**: OpenAI TTS
-2. **Fallback**: Google Cloud TTS (if configured)
+1. **Primary**: Google Cloud Text-to-Speech
+2. **Fallback**: OpenAI TTS (if configured)
 
 ---
 
@@ -202,7 +215,12 @@ LIVEKIT_URL=wss://your-project.livekit.cloud
 LIVEKIT_API_KEY=your-api-key
 LIVEKIT_API_SECRET=your-api-secret
 
-# OpenAI (REQUIRED for STT/TTS, optional for LLM)
+# Google Cloud (REQUIRED - Primary STT/TTS/LLM)
+GOOGLE_API_KEY=your-google-api-key
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+# OR use GOOGLE_APPLICATION_CREDENTIALS_JSON or GOOGLE_APPLICATION_CREDENTIALS_BASE64
+
+# OpenAI (OPTIONAL - Fallback for STT/TTS/LLM)
 OPENAI_API_KEY=sk-...
 
 # Ollama (OPTIONAL but recommended for local LLM)
