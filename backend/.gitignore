@@ -19,3 +19,6 @@ htmlcov/
 
 # Google Cloud Service Account Credentials
 google-credentials.json
+
+# Secrets file for LiveKit Cloud deployment
+.env.secrets
