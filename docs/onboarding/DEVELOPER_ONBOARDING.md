@@ -99,8 +99,9 @@ Fortell_AI_Product/
 ### Backend
 - **Python 3.11+**: Main language
 - **LiveKit**: Real-time communication
-- **OpenAI**: STT/TTS services
-- **Ollama**: Local LLM
+- **Google Cloud**: STT/TTS/LLM services (primary)
+- **OpenAI**: STT/TTS/LLM services (fallback)
+- **Ollama**: Local LLM (fallback)
 - **PostgreSQL**: Database
 - **Pytest**: Testing framework
 
@@ -197,6 +198,9 @@ python main.py dev
 
 ### External Resources
 - LiveKit Docs: https://docs.livekit.io/
+- Google Cloud Speech-to-Text: https://cloud.google.com/speech-to-text/docs
+- Google Cloud Text-to-Speech: https://cloud.google.com/text-to-speech/docs
+- Google Gemini API: https://ai.google.dev/docs
 - OpenAI API: https://platform.openai.com/docs
 - Next.js Docs: https://nextjs.org/docs
 

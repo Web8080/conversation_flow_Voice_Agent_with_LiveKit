@@ -33,9 +33,9 @@ See `docs/QUICKSTART.md` for detailed instructions.
 
 ### Core Functionality
 - [x] Real-time voice interaction via LiveKit
-- [x] Speech-to-Text (OpenAI Whisper)
-- [x] LLM (OpenAI primary + Ollama fallback)
-- [x] Text-to-Speech (OpenAI TTS)
+- [x] Speech-to-Text (Google Cloud Speech-to-Text primary + OpenAI fallback)
+- [x] LLM (Google Gemini primary + OpenAI/Ollama fallback)
+- [x] Text-to-Speech (Google Cloud TTS primary + OpenAI fallback)
 - [x] State machine conversation flow (5+ states)
 - [x] Appointment scheduling use case
 
@@ -64,16 +64,15 @@ See `docs/QUICKSTART.md` for detailed instructions.
 - **[monitoring/LOGGING_STRATEGY.md](monitoring/LOGGING_STRATEGY.md)** - Observability
 - **[security/scripts/](security/scripts/)** - Security scanning tools
 
-### Interview Preparation
-- **[03_Project_Presentation_Thought_Process.md](docs/03_Project_Presentation_Thought_Process.md)** - Presentation narrative
 
 ## Tech Stack
 
 **Backend**
 - Python 3.11+
 - LiveKit Python SDK
-- OpenAI (STT/TTS)
-- Ollama (Local LLM)
+- Google Cloud (STT/TTS/LLM primary)
+- OpenAI (STT/TTS/LLM fallback)
+- Ollama (Local LLM fallback)
 - PostgreSQL + TimescaleDB
 
 **Frontend**

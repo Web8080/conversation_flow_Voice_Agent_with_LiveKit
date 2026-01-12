@@ -12,17 +12,17 @@ This repository contains the complete documentation, design, and implementation 
 
 ## Documentation Index
 
-### Primary Documents (Interview Ready)
+### Primary Documents
 
 **`VOICE_AGENT_DESIGN.md`** 
 - Clean, focused system design document
 - Architecture, state machine design, and rationale
-- **This is what you'll walk through in the interview**
+- System overview and design decisions
 
 **`EXECUTIVE_APPROACH.md`**
 - Professional approach and execution strategy
-- What they're really testing (insights)
-- Interview narrative flow and success criteria
+- Design insights and rationale
+- Project narrative and success criteria
 
 **`03_Project_Presentation_Thought_Process.md`**
 - Detailed thought process narrative
@@ -79,11 +79,11 @@ Extend the agent with state machine-based conversation flow:
 
 ## Technology Stack
 
-- **Backend**: Python 3.8+ with LiveKit Python SDK
-- **Frontend**: Next.js (TypeScript) - recommended
-- **STT**: OpenAI Whisper, Google Speech-to-Text, or Azure Speech
-- **LLM**: OpenAI GPT, Groq, or Anthropic Claude
-- **TTS**: OpenAI TTS, Google Cloud TTS, or Azure TTS
+- **Backend**: Python 3.11+ with LiveKit Python SDK
+- **Frontend**: Next.js (TypeScript)
+- **STT**: Google Cloud Speech-to-Text (primary), OpenAI Whisper (fallback)
+- **LLM**: Google Gemini (primary), OpenAI GPT (fallback), Ollama (fallback)
+- **TTS**: Google Cloud TTS (primary), OpenAI TTS (fallback)
 - **Deployment**: LiveKit Cloud (backend), Vercel (frontend)
 
 ## Key Design Principles
@@ -119,4 +119,4 @@ Extend the agent with state machine-based conversation flow:
 
 ## Contact and Questions
 
-For questions about this project or design decisions, refer to the presentation document (`03_Project_Presentation_Thought_Process.md`) which contains detailed explanations of the approach and rationale.
+For questions about this project or design decisions, refer to the design documents which contain detailed explanations of the approach and rationale.

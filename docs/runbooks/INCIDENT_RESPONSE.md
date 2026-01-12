@@ -71,9 +71,9 @@ curl https://backend-url/health
 ```
 
 **Common Causes**:
-1. STT service failure → Check OpenAI API status
-2. LLM service timeout → Check Ollama/GPT connectivity
-3. TTS service failure → Check OpenAI API
+1. STT service failure → Check Google Cloud Speech API or OpenAI API status
+2. LLM service timeout → Check Google Gemini, OpenAI, or Ollama connectivity
+3. TTS service failure → Check Google Cloud TTS or OpenAI API
 4. LiveKit connection issue → Check LiveKit Cloud status
 
 **Resolution**:
