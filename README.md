@@ -1,6 +1,12 @@
 # Voice Agent with LiveKit - Complete Implementation
 
-A production-ready voice agent system with LiveKit, featuring state-machine-based conversation flows, comprehensive security, monitoring, and professional UI/UX design.
+A production-ready real-time voice agent system built with LiveKit, featuring state-machine-based conversation flows, comprehensive security, monitoring, and professional UI/UX design. This full-stack application enables natural voice interactions through advanced Speech-to-Text (STT), Large Language Model (LLM), and Text-to-Speech (TTS) integration, deployed on LiveKit Cloud and Vercel.
+
+## About
+
+This project demonstrates a complete end-to-end voice agent implementation combining real-time WebRTC communication, AI-powered natural language processing, and cloud infrastructure. The system features a Python backend with state machine-based conversation management, a Next.js TypeScript frontend, and comprehensive DevOps practices including security scanning, monitoring, and automated deployment.
+
+**Key Technologies**: Python, Next.js, TypeScript, LiveKit, Google Cloud (Speech-to-Text, Text-to-Speech, Gemini), OpenAI (fallback), WebRTC, PostgreSQL, Docker, Vercel, LiveKit Cloud
 
 ## Quick Start
 
