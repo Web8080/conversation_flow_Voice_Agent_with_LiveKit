@@ -62,9 +62,11 @@ export default function VoiceAgentUI() {
         })
         
         // Check if this is an audio track from the agent
+        // Agent joins with identity like "agent-{job_id}" (e.g., "agent-AJ_Fus3FPcfa7e8")
         const isAgent = 
           participant.identity === 'agent' ||
           participant.identity === 'appointment-scheduler' ||
+          participant.identity?.startsWith('agent-') || // Match "agent-{job_id}" pattern
           participant.name?.toLowerCase().includes('agent') ||
           participant.name?.toLowerCase().includes('appointment') ||
           participant.metadata?.toLowerCase().includes('agent')
