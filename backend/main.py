@@ -168,8 +168,8 @@ class Stage1VoiceAgent:
                                 # Process buffer (don't await here to avoid blocking)
                                 asyncio.create_task(self.process_audio_buffer(buffer_to_process))
                                     
-                            except Exception as e:
-                                logger.error("Error processing audio frame", error=str(e), hypothesis="H2")
+                        except Exception as e:
+                            logger.error("Error processing audio frame", error=str(e), hypothesis="H2")
                     # #region debug log
                     logger.info("DEBUG: Audio stream iteration ended", total_frames=frame_count, hypothesis="F")
                     # #endregion
