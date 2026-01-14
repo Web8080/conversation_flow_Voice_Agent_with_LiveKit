@@ -1,4 +1,4 @@
-# ML/AI Scientist Approach to Voice Agent
+# Approach to Voice Agent
 
 ## Executive Summary
 

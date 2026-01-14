@@ -282,6 +282,7 @@ async def entrypoint(ctx: JobContext):
     # #region debug log
     logger.info("DEBUG: Agent entrypoint called", 
                 room=ctx.room.name,
+                room_id=ctx.room.sid if hasattr(ctx.room, 'sid') else None,
                 hypothesis="D")
     # #endregion
     
@@ -293,6 +294,8 @@ async def entrypoint(ctx: JobContext):
     logger.info("DEBUG: Agent connected to room", 
                 room=ctx.room.name,
                 local_identity=ctx.room.local_participant.identity,
+                local_name=ctx.room.local_participant.name,
+                remote_participants=len(ctx.room.remote_participants),
                 hypothesis="D")
     # #endregion
     

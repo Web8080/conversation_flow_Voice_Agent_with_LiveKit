@@ -102,9 +102,11 @@ export default function VoiceAgentUI() {
         // #endregion
         
         // Check if this is the agent (by identity, name, or metadata)
+        // Agent joins with identity like "agent-{job_id}" (e.g., "agent-AJ_Fus3FPcfa7e8")
         const isAgent = 
           participant.identity === 'agent' ||
           participant.identity === 'appointment-scheduler' ||
+          participant.identity?.startsWith('agent-') || // Match "agent-{job_id}" pattern
           participant.name?.toLowerCase().includes('agent') ||
           participant.name?.toLowerCase().includes('appointment') ||
           participant.metadata?.toLowerCase().includes('agent')
@@ -203,17 +205,25 @@ export default function VoiceAgentUI() {
         if (dispatchResult.success) {
           addMessage('agent', 'Agent dispatch requested. Waiting for agent to join...')
           
+          // #region debug log
+          fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoiceAgentUI.tsx:203',message:'Dispatch successful, starting agent polling',data:{roomName,initialParticipantCount:initialParticipantIds.size,dispatchResult},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+          // #endregion
+          
           // Monitor for new participants after dispatch (agent should be the only one)
           let checkCount = 0
           const checkForAgent = setInterval(() => {
             checkCount++
             const currentParticipants = Array.from(newRoom.remoteParticipants.keys())
+            const participantDetails = currentParticipants.map(id => {
+              const p = newRoom.remoteParticipants.get(id)
+              return p ? {id, identity: p.identity, name: p.name, metadata: p.metadata} : null
+            }).filter(Boolean)
             const newParticipants = currentParticipants.filter(
               id => !initialParticipantIds.has(id)
             )
             
             // #region debug log
-            fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoiceAgentUI.tsx:193',message:'Polling for agent',data:{checkCount,currentParticipantCount:currentParticipants.length,newParticipantCount:newParticipants.length,newParticipants,agentDetected},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+            fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoiceAgentUI.tsx:214',message:'Polling for agent',data:{checkCount,currentParticipantCount:currentParticipants.length,newParticipantCount:newParticipants.length,newParticipants,participantDetails,agentDetected},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
             // #endregion
             
             if (newParticipants.length > 0 && !agentDetected) {
@@ -222,13 +232,29 @@ export default function VoiceAgentUI() {
                 const participant = newRoom.remoteParticipants.get(participantId)
                 if (participant && !agentDetected) {
                   // #region debug log
-                  fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoiceAgentUI.tsx:200',message:'New participant detected in polling',data:{participantId,identity:participant.identity,name:participant.name,metadata:participant.metadata},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                  fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoiceAgentUI.tsx:225',message:'New participant detected in polling',data:{participantId,identity:participant.identity,name:participant.name,metadata:participant.metadata},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
                   // #endregion
-                  // Any new participant after dispatch is likely the agent
-                  agentDetected = true
-                  clearInterval(checkForAgent)
-                  addMessage('agent', `Agent joined the room (${participant.identity})`, 'greeting')
-                  setCurrentState('greeting')
+                  
+                  // Check if this is the agent (agent joins with identity like "agent-{job_id}")
+                  const isAgent = 
+                    participant.identity === 'agent' ||
+                    participant.identity === 'appointment-scheduler' ||
+                    participant.identity?.startsWith('agent-') || // Match "agent-{job_id}" pattern
+                    participant.name?.toLowerCase().includes('agent') ||
+                    participant.name?.toLowerCase().includes('appointment') ||
+                    participant.metadata?.toLowerCase().includes('agent')
+                  
+                  // #region debug log
+                  fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoiceAgentUI.tsx:235',message:'Agent detection check in polling',data:{isAgent,identity:participant.identity,name:participant.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                  // #endregion
+                  
+                  // Any new participant after dispatch is likely the agent, or if identity starts with "agent-"
+                  if (isAgent || newParticipants.length === 1) {
+                    agentDetected = true
+                    clearInterval(checkForAgent)
+                    addMessage('agent', `Agent joined the room (${participant.identity})`, 'greeting')
+                    setCurrentState('greeting')
+                  }
                 }
               })
             }
