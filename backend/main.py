@@ -114,24 +114,39 @@ class Stage1VoiceAgent:
                                 self.audio_buffer.append(audio_frame)
                                 current_time = asyncio.get_event_loop().time()
                                 
-                                logger.debug("DEBUG: Audio frame received", 
-                                           buffer_size=len(self.audio_buffer),
-                                           frame_samples=audio_frame.samples_per_channel if hasattr(audio_frame, 'samples_per_channel') else None,
-                                           hypothesis="H2")
+                                if frame_count % 50 == 0:  # Log every 50 frames for timing
+                                    logger.info("DEBUG: Audio frame received", 
+                                               buffer_size=len(self.audio_buffer),
+                                               frame_samples=audio_frame.samples_per_channel if hasattr(audio_frame, 'samples_per_channel') else None,
+                                               hypothesis="H2")
                                 
                                 if self.last_audio_time is None:
+                                    logger.info("DEBUG: Initializing last_audio_time", current_time=current_time, hypothesis="H2")
                                     self.last_audio_time = current_time
                                 
                                 # Process buffer every buffer_duration seconds
-                                if current_time - self.last_audio_time >= self.buffer_duration:
+                                time_diff = current_time - self.last_audio_time
+                                if frame_count % 50 == 0:  # Log every 50 frames for timing
+                                    logger.info("DEBUG: Time check", 
+                                               current_time=current_time,
+                                               last_audio_time=self.last_audio_time,
+                                               time_diff=time_diff,
+                                               buffer_duration=self.buffer_duration,
+                                               should_process=time_diff >= self.buffer_duration,
+                                               hypothesis="H2")
+                                
+                                if time_diff >= self.buffer_duration:
                                     logger.info("DEBUG: Buffer ready for processing", 
                                               buffer_size=len(self.audio_buffer), 
                                               buffer_duration=self.buffer_duration,
+                                              time_diff=time_diff,
                                               hypothesis="H2")
-                                    # Process buffer (don't await here to avoid blocking)
-                                    asyncio.create_task(self.process_audio_buffer())
+                                    # Copy buffer before clearing (avoid race condition)
+                                    buffer_to_process = self.audio_buffer.copy()
                                     self.audio_buffer = []
                                     self.last_audio_time = current_time
+                                    # Process buffer (don't await here to avoid blocking)
+                                    asyncio.create_task(self.process_audio_buffer(buffer_to_process))
                                     
                             except Exception as e:
                                 logger.error("Error processing audio frame", error=str(e), hypothesis="H2")
@@ -181,22 +196,22 @@ class Stage1VoiceAgent:
         except Exception as e:
             logger.error("Error processing audio stream", error=str(e), track_type=type(track).__name__)
     
-    async def process_audio_buffer(self):
+    async def process_audio_buffer(self, buffer_to_process=None):
         """Process buffered audio frames: STT → LLM → TTS"""
-        if not self.audio_buffer:
-            # #region debug log
-            logger.debug("DEBUG: Empty audio buffer, skipping", hypothesis="F")
-            # #endregion
+        # Use provided buffer or fall back to instance buffer
+        if buffer_to_process is None:
+            buffer_to_process = self.audio_buffer
+        
+        if not buffer_to_process:
+            logger.info("DEBUG: Empty audio buffer, skipping", hypothesis="H2")
             return
         
-        # #region debug log
-        logger.info("DEBUG: Processing audio buffer", buffer_size=len(self.audio_buffer), hypothesis="F")
-        # #endregion
+        logger.info("DEBUG: Processing audio buffer", buffer_size=len(buffer_to_process), hypothesis="H2")
         
         try:
             # Combine audio frames
-            combined_audio = self.audio_buffer[0].data.tobytes()
-            for frame in self.audio_buffer[1:]:
+            combined_audio = buffer_to_process[0].data.tobytes()
+            for frame in buffer_to_process[1:]:
                 combined_audio += frame.data.tobytes()
             
             # #region debug log
