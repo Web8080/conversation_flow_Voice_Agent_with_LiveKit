@@ -80,17 +80,37 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify(dispatchBody)
       })
 
+      // Server-side logging (will appear in Vercel function logs)
+      console.log('[DISPATCH] LiveKit API call:', {
+        url: dispatchUrl,
+        body: dispatchBody,
+        status: response.status,
+        statusText: response.statusText,
+      })
+
       // #region debug log
       fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dispatch-agent/route.ts:82',message:'LiveKit API response received',data:{status:response.status,statusText:response.statusText,ok:response.ok,headers:Object.fromEntries(response.headers.entries())},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
       // #endregion
       
+      // Read response body for detailed logging
+      const responseText = await response.text()
+      console.log('[DISPATCH] LiveKit API response:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: responseText,
+        contentType: response.headers.get('content-type'),
+      })
+      
       if (!response.ok) {
-        const errorText = await response.text()
+        console.error('[DISPATCH] LiveKit API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: responseText,
+        })
         // #region debug log
-        fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dispatch-agent/route.ts:62',message:'Dispatch API error',data:{status:response.status,errorText},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dispatch-agent/route.ts:62',message:'Dispatch API error',data:{status:response.status,errorText:responseText},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
         // #endregion
-        console.error('Dispatch API error:', response.status, errorText)
-        throw new Error(`Failed to dispatch agent: ${response.status} ${errorText}`)
+        throw new Error(`Failed to dispatch agent: ${response.status} ${responseText}`)
       }
 
       // Handle response - LiveKit API might return "OK" as text or JSON
@@ -98,24 +118,30 @@ export async function POST(request: NextRequest) {
       let result: any = {}
       
       if (contentType.includes('application/json')) {
-        result = await response.json()
+        try {
+          result = JSON.parse(responseText)
+        } catch (e) {
+          console.error('[DISPATCH] Failed to parse JSON response:', responseText)
+          result = { message: responseText }
+        }
       } else {
         // Response might be "OK" or empty - dispatch succeeded
-        const textResponse = await response.text()
-        console.log('Dispatch API response (text):', textResponse)
+        console.log('[DISPATCH] LiveKit API response (text):', responseText)
         
         // If we get "OK" or empty, dispatch was successful
-        if (textResponse.trim() === 'OK' || textResponse.trim() === '') {
+        if (responseText.trim() === 'OK' || responseText.trim() === '') {
           result = { success: true }
         } else {
           // Try to parse as JSON anyway
           try {
-            result = JSON.parse(textResponse)
+            result = JSON.parse(responseText)
           } catch {
-            result = { message: textResponse }
+            result = { message: responseText }
           }
         }
       }
+      
+      console.log('[DISPATCH] Parsed result:', result)
       
       // #region debug log
       fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dispatch-agent/route.ts:85',message:'Dispatch result parsed',data:{result,contentType},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
