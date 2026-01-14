@@ -200,6 +200,18 @@ export default function VoiceAgentUI() {
         
         const dispatchResult = await dispatchResponse.json()
         
+        // Log detailed LiveKit API response for debugging
+        console.log('[FRONTEND] Dispatch API response:', dispatchResult)
+        if (dispatchResult.livekit_response) {
+          console.log('[FRONTEND] LiveKit API details:', {
+            status: dispatchResult.livekit_response.status,
+            body: dispatchResult.livekit_response.body,
+            contentType: dispatchResult.livekit_response.contentType,
+            parsed: dispatchResult.livekit_response.parsed,
+          })
+          console.log('[FRONTEND] Dispatch request sent:', dispatchResult.dispatch_request)
+        }
+        
         // #region debug log
         fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoiceAgentUI.tsx:180',message:'Dispatch result parsed',data:dispatchResult,timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
         // #endregion
