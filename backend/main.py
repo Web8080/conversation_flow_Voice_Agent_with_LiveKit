@@ -41,7 +41,7 @@ class Stage1VoiceAgent:
         self.audio_source = None
         self.audio_track = None
         self.audio_buffer = []
-        self.buffer_duration = 2.0
+        self.buffer_duration = 1.5  # Reduced from 2.0 for faster responses
         self.last_audio_time = None
         self.conversation_history = []
     
@@ -115,17 +115,29 @@ class Stage1VoiceAgent:
                             # AudioFrameEvent might have .frame, .audio_frame, or be directly accessible
                             if hasattr(audio_frame_event, 'frame'):
                                 try:
-                                    audio_frame = audio_frame_event.frame
-                                except:
-                                    pass
+                                    potential_frame = audio_frame_event.frame
+                                    if isinstance(potential_frame, rtc.AudioFrame):
+                                        audio_frame = potential_frame
+                                except Exception as e:
+                                    if frame_count == 1:
+                                        logger.debug("Failed to access .frame", error=str(e), hypothesis="H2")
+                            
                             if audio_frame is None and hasattr(audio_frame_event, 'audio_frame'):
                                 try:
-                                    audio_frame = audio_frame_event.audio_frame
-                                except:
-                                    pass
-                            if audio_frame is None and hasattr(audio_frame_event, '__getitem__'):
+                                    potential_frame = audio_frame_event.audio_frame
+                                    if isinstance(potential_frame, rtc.AudioFrame):
+                                        audio_frame = potential_frame
+                                except Exception as e:
+                                    if frame_count == 1:
+                                        logger.debug("Failed to access .audio_frame", error=str(e), hypothesis="H2")
+                            
+                            # Try using AudioFrameEvent directly if it has AudioFrame-like interface
+                            if audio_frame is None and hasattr(audio_frame_event, 'data'):
                                 try:
-                                    audio_frame = audio_frame_event[0]  # Try indexing
+                                    # Check if it has the same interface as AudioFrame
+                                    if hasattr(audio_frame_event, 'sample_rate') and hasattr(audio_frame_event, 'num_channels'):
+                                        # Treat as AudioFrame-like object
+                                        audio_frame = audio_frame_event
                                 except:
                                     pass
                             
@@ -134,16 +146,28 @@ class Stage1VoiceAgent:
                                 attrs = [a for a in dir(audio_frame_event) if not a.startswith('_')]
                                 logger.info("DEBUG: AudioFrameEvent structure", 
                                            event_type=type(audio_frame_event).__name__,
+                                           has_data=hasattr(audio_frame_event, 'data'),
+                                           has_frame=hasattr(audio_frame_event, 'frame'),
+                                           has_audio_frame=hasattr(audio_frame_event, 'audio_frame'),
                                            attrs=attrs[:20],
                                            hypothesis="H2")
                         
-                        if audio_frame is None or not isinstance(audio_frame, rtc.AudioFrame):
+                        # Final check: ensure we have a valid AudioFrame or AudioFrame-like object
+                        if audio_frame is None:
                             # Skip invalid frames but continue processing
                             if frame_count % 500 == 0:  # Log less frequently
                                 logger.warning("DEBUG: Skipping invalid frame", 
                                              frame_count=frame_count,
                                              event_type=type(audio_frame_event).__name__,
-                                             frame_type=type(audio_frame).__name__ if audio_frame else None,
+                                             hypothesis="H2")
+                            continue
+                        
+                        # Verify audio_frame has required attributes
+                        if not hasattr(audio_frame, 'data'):
+                            if frame_count % 500 == 0:
+                                logger.warning("DEBUG: Frame missing data attribute", 
+                                             frame_count=frame_count,
+                                             frame_type=type(audio_frame).__name__,
                                              hypothesis="H2")
                             continue
                         
