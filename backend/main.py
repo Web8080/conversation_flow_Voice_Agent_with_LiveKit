@@ -102,61 +102,71 @@ class Stage1VoiceAgent:
                 try:
                     frame_count = 0
                     # Iterate directly over audio frames from the stream
-                    async for audio_frame in audio_stream:
+                    async for audio_frame_event in audio_stream:
                         frame_count += 1
-                        # #region debug log
-                        if frame_count % 100 == 0:  # Log every 100 frames to avoid spam
-                            logger.info("DEBUG: Processing audio frame", 
-                                       frame_count=frame_count, 
-                                       frame_type=type(audio_frame).__name__,
-                                       is_audio_frame=isinstance(audio_frame, rtc.AudioFrame),
-                                       hypothesis="F")
-                        # #endregion
                         
-                        if isinstance(audio_frame, rtc.AudioFrame):
-                            try:
-                                self.audio_buffer.append(audio_frame)
-                                current_time = asyncio.get_event_loop().time()
-                                
-                                # Log every 100 frames to confirm we're processing AudioFrames
-                                if frame_count % 100 == 0:
-                                    logger.info("DEBUG: Processing AudioFrame", 
-                                               frame_count=frame_count,
-                                               buffer_size=len(self.audio_buffer),
-                                               frame_type=type(audio_frame).__name__,
-                                               hypothesis="H2")
-                                
-                                if self.last_audio_time is None:
-                                    logger.info("DEBUG: Initializing last_audio_time", current_time=current_time, hypothesis="H2")
-                                    self.last_audio_time = current_time
-                                
-                                # Process buffer every buffer_duration seconds
-                                time_diff = current_time - self.last_audio_time
-                                
-                                # Log timing info every 100 frames to see what's happening
-                                if frame_count % 100 == 0:
-                                    logger.info("DEBUG: Time check", 
-                                               frame_count=frame_count,
-                                               buffer_size=len(self.audio_buffer),
-                                               current_time=current_time,
-                                               last_audio_time=self.last_audio_time,
-                                               time_diff=time_diff,
-                                               buffer_duration=self.buffer_duration,
-                                               should_process=time_diff >= self.buffer_duration,
-                                               hypothesis="H2")
-                                
-                                if time_diff >= self.buffer_duration:
-                                    logger.info("DEBUG: Buffer ready for processing", 
-                                              buffer_size=len(self.audio_buffer), 
-                                              buffer_duration=self.buffer_duration,
-                                              time_diff=time_diff,
-                                              hypothesis="H2")
-                                    # Copy buffer before clearing (avoid race condition)
-                                    buffer_to_process = self.audio_buffer.copy()
-                                    self.audio_buffer = []
-                                    self.last_audio_time = current_time
-                                    # Process buffer (don't await here to avoid blocking)
-                                    asyncio.create_task(self.process_audio_buffer(buffer_to_process))
+                        # Extract AudioFrame from AudioFrameEvent
+                        # AudioStream yields AudioFrameEvent objects, not AudioFrame directly
+                        audio_frame = None
+                        if isinstance(audio_frame_event, rtc.AudioFrame):
+                            audio_frame = audio_frame_event
+                        elif hasattr(audio_frame_event, 'frame'):
+                            # AudioFrameEvent has a .frame property
+                            audio_frame = audio_frame_event.frame
+                        else:
+                            # Log available attributes for debugging
+                            if frame_count == 1:
+                                logger.info("DEBUG: AudioFrameEvent attributes", 
+                                           event_type=type(audio_frame_event).__name__,
+                                           has_frame=hasattr(audio_frame_event, 'frame'),
+                                           has_audio_frame=hasattr(audio_frame_event, 'audio_frame'),
+                                           attrs=[a for a in dir(audio_frame_event) if not a.startswith('_')][:15],
+                                           hypothesis="H2")
+                            continue
+                        
+                        if audio_frame is None or not isinstance(audio_frame, rtc.AudioFrame):
+                            if frame_count % 100 == 0:
+                                logger.warning("DEBUG: Invalid AudioFrame extracted", 
+                                             frame_count=frame_count,
+                                             frame_type=type(audio_frame).__name__ if audio_frame else None,
+                                             hypothesis="H2")
+                            continue
+                        
+                        try:
+                            self.audio_buffer.append(audio_frame)
+                            current_time = asyncio.get_event_loop().time()
+                            
+                            if self.last_audio_time is None:
+                                logger.info("DEBUG: Initializing last_audio_time", current_time=current_time, hypothesis="H2")
+                                self.last_audio_time = current_time
+                            
+                            # Process buffer every buffer_duration seconds
+                            time_diff = current_time - self.last_audio_time
+                            
+                            # Log timing info every 100 frames to see what's happening
+                            if frame_count % 100 == 0:
+                                logger.info("DEBUG: Time check", 
+                                           frame_count=frame_count,
+                                           buffer_size=len(self.audio_buffer),
+                                           current_time=current_time,
+                                           last_audio_time=self.last_audio_time,
+                                           time_diff=time_diff,
+                                           buffer_duration=self.buffer_duration,
+                                           should_process=time_diff >= self.buffer_duration,
+                                           hypothesis="H2")
+                            
+                            if time_diff >= self.buffer_duration:
+                                logger.info("DEBUG: Buffer ready for processing", 
+                                          buffer_size=len(self.audio_buffer), 
+                                          buffer_duration=self.buffer_duration,
+                                          time_diff=time_diff,
+                                          hypothesis="H2")
+                                # Copy buffer before clearing (avoid race condition)
+                                buffer_to_process = self.audio_buffer.copy()
+                                self.audio_buffer = []
+                                self.last_audio_time = current_time
+                                # Process buffer (don't await here to avoid blocking)
+                                asyncio.create_task(self.process_audio_buffer(buffer_to_process))
                                     
                             except Exception as e:
                                 logger.error("Error processing audio frame", error=str(e), hypothesis="H2")
