@@ -341,8 +341,6 @@ export default function VoiceAgentUI() {
           addMessage('agent', 'Still waiting for agent to join. Check agent logs.')
         }
       }, 30000)
-      
-      setCurrentState(null)
     } catch (error) {
       console.error('Failed to connect:', error)
       addMessage('agent', `Connection failed: ${error}`)
