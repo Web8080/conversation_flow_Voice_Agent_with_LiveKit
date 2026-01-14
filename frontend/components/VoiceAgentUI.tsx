@@ -148,6 +148,14 @@ export default function VoiceAgentUI() {
           if (data.type === 'message') {
             addMessage('agent', data.text, data.state)
           }
+          if (data.type === 'user_transcription') {
+            // Display user's transcribed speech
+            addMessage('user', data.text)
+          }
+          if (data.type === 'agent_transcription') {
+            // Display agent's transcribed speech
+            addMessage('agent', data.text)
+          }
           if (data.type === 'system_status') {
             setSystemStatus(data.status)
           }

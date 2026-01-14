@@ -110,24 +110,39 @@ class Stage1VoiceAgent:
                         audio_frame = None
                         if isinstance(audio_frame_event, rtc.AudioFrame):
                             audio_frame = audio_frame_event
-                        elif hasattr(audio_frame_event, 'frame'):
-                            # AudioFrameEvent has a .frame property
-                            audio_frame = audio_frame_event.frame
                         else:
-                            # Log available attributes for debugging
-                            if frame_count == 1:
-                                logger.info("DEBUG: AudioFrameEvent attributes", 
+                            # Try multiple ways to extract AudioFrame from AudioFrameEvent
+                            # AudioFrameEvent might have .frame, .audio_frame, or be directly accessible
+                            if hasattr(audio_frame_event, 'frame'):
+                                try:
+                                    audio_frame = audio_frame_event.frame
+                                except:
+                                    pass
+                            if audio_frame is None and hasattr(audio_frame_event, 'audio_frame'):
+                                try:
+                                    audio_frame = audio_frame_event.audio_frame
+                                except:
+                                    pass
+                            if audio_frame is None and hasattr(audio_frame_event, '__getitem__'):
+                                try:
+                                    audio_frame = audio_frame_event[0]  # Try indexing
+                                except:
+                                    pass
+                            
+                            # Log structure on first frame for debugging
+                            if audio_frame is None and frame_count == 1:
+                                attrs = [a for a in dir(audio_frame_event) if not a.startswith('_')]
+                                logger.info("DEBUG: AudioFrameEvent structure", 
                                            event_type=type(audio_frame_event).__name__,
-                                           has_frame=hasattr(audio_frame_event, 'frame'),
-                                           has_audio_frame=hasattr(audio_frame_event, 'audio_frame'),
-                                           attrs=[a for a in dir(audio_frame_event) if not a.startswith('_')][:15],
+                                           attrs=attrs[:20],
                                            hypothesis="H2")
-                            continue
                         
                         if audio_frame is None or not isinstance(audio_frame, rtc.AudioFrame):
-                            if frame_count % 100 == 0:
-                                logger.warning("DEBUG: Invalid AudioFrame extracted", 
+                            # Skip invalid frames but continue processing
+                            if frame_count % 500 == 0:  # Log less frequently
+                                logger.warning("DEBUG: Skipping invalid frame", 
                                              frame_count=frame_count,
+                                             event_type=type(audio_frame_event).__name__,
                                              frame_type=type(audio_frame).__name__ if audio_frame else None,
                                              hypothesis="H2")
                             continue
@@ -254,6 +269,19 @@ class Stage1VoiceAgent:
             
             logger.info("User said", text=user_text[:100])
             
+            # Send user transcription to frontend via data message
+            try:
+                import json
+                await self.ctx.room.local_participant.publish_data(
+                    json.dumps({
+                        "type": "user_transcription",
+                        "text": user_text
+                    }).encode('utf-8'),
+                    reliable=True
+                )
+            except Exception as e:
+                logger.warning("Failed to send user transcription", error=str(e))
+            
             # Step 2: LLM Response (simple single prompt, no state machine)
             logger.info("DEBUG: Calling LLM get_llm_response", user_text=user_text[:100], hypothesis="H4")
             
@@ -266,6 +294,19 @@ class Stage1VoiceAgent:
             
             if not response_text:
                 response_text = "I'm sorry, I didn't understand. Could you repeat that?"
+            
+            # Send agent transcription to frontend via data message
+            try:
+                import json
+                await self.ctx.room.local_participant.publish_data(
+                    json.dumps({
+                        "type": "agent_transcription",
+                        "text": response_text
+                    }).encode('utf-8'),
+                    reliable=True
+                )
+            except Exception as e:
+                logger.warning("Failed to send agent transcription", error=str(e))
             
             # Step 3: Text-to-Speech
             logger.info("DEBUG: Calling TTS say", response_text=response_text[:100], hypothesis="H5")
