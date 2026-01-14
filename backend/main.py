@@ -396,7 +396,10 @@ async def entrypoint(ctx: JobContext):
 
 
 if __name__ == "__main__":
+    # Remove agent_name to enable auto-join (workaround for Twirp API not working)
+    # Agents without agent_name automatically join rooms when users connect
+    # This bypasses the need for programmatic dispatch via Twirp API
     cli.run_app(WorkerOptions(
         entrypoint_fnc=entrypoint,
-        agent_name="appointment-scheduler"
+        # agent_name="appointment-scheduler"  # Disabled to enable auto-join
     ))

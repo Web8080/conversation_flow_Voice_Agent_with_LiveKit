@@ -180,8 +180,13 @@ export default function VoiceAgentUI() {
 
       setRoom(newRoom)
       setIsConnected(true)
-      addMessage('agent', 'Connected to room successfully. Dispatching agent...')
+      addMessage('agent', 'Connected to room successfully. Agent will join automatically...')
       
+      // Note: Agent auto-joins when agent_name is removed from WorkerOptions
+      // No need to dispatch manually - agent will join automatically when user connects
+      
+      // Keep dispatch code commented out as fallback if auto-join doesn't work
+      /*
       // Dispatch agent after connecting
       try {
         // #region debug log
