@@ -79,11 +79,19 @@ class Stage1VoiceAgent:
         """Process incoming audio stream from user using AudioStream"""
         logger.info("Processing audio stream from participant", track_type=type(track).__name__)
         
+        # #region debug log
+        import json
+        with open('/Users/user/Fortell_AI_Product/.cursor/debug.log', 'a') as f:
+            f.write(json.dumps({"location":"main.py:78","message":"process_audio_stream called","data":{"track_type":type(track).__name__},"timestamp":asyncio.get_event_loop().time(),"sessionId":"debug-session","runId":"run1","hypothesisId":"H1"}) + "\n")
+        # #endregion
+        
         try:
             # For RemoteAudioTrack, we need to use AudioStream wrapper
             if isinstance(track, rtc.RemoteAudioTrack):
                 # #region debug log
                 logger.info("DEBUG: Creating AudioStream", track_type=type(track).__name__, hypothesis="F")
+                with open('/Users/user/Fortell_AI_Product/.cursor/debug.log', 'a') as f:
+                    f.write(json.dumps({"location":"main.py:85","message":"Creating AudioStream","data":{"track_type":type(track).__name__},"timestamp":asyncio.get_event_loop().time(),"sessionId":"debug-session","runId":"run1","hypothesisId":"H1"}) + "\n")
                 # #endregion
                 
                 try:
@@ -91,10 +99,14 @@ class Stage1VoiceAgent:
                     audio_stream = rtc.AudioStream(track)
                     # #region debug log
                     logger.info("DEBUG: AudioStream created", has_audio_stream=True, hypothesis="F")
+                    with open('/Users/user/Fortell_AI_Product/.cursor/debug.log', 'a') as f:
+                        f.write(json.dumps({"location":"main.py:91","message":"AudioStream created successfully","data":{},"timestamp":asyncio.get_event_loop().time(),"sessionId":"debug-session","runId":"run1","hypothesisId":"H1"}) + "\n")
                     # #endregion
                 except AttributeError as e:
                     # #region debug log
                     logger.error("DEBUG: AudioStream not available", error=str(e), hypothesis="F")
+                    with open('/Users/user/Fortell_AI_Product/.cursor/debug.log', 'a') as f:
+                        f.write(json.dumps({"location":"main.py:96","message":"AudioStream creation failed","data":{"error":str(e)},"timestamp":asyncio.get_event_loop().time(),"sessionId":"debug-session","runId":"run1","hypothesisId":"H1"}) + "\n")
                     # #endregion
                     logger.error("AudioStream not available in this SDK version", error=str(e))
                     return
@@ -120,6 +132,12 @@ class Stage1VoiceAgent:
                                 self.audio_buffer.append(audio_frame)
                                 current_time = asyncio.get_event_loop().time()
                                 
+                                # #region debug log
+                                import json
+                                with open('/Users/user/Fortell_AI_Product/.cursor/debug.log', 'a') as f:
+                                    f.write(json.dumps({"location":"main.py:118","message":"Audio frame received","data":{"buffer_size":len(self.audio_buffer),"frame_samples":audio_frame.samples_per_channel if hasattr(audio_frame, 'samples_per_channel') else None},"timestamp":current_time,"sessionId":"debug-session","runId":"run1","hypothesisId":"H2"}) + "\n")
+                                # #endregion
+                                
                                 if self.last_audio_time is None:
                                     self.last_audio_time = current_time
                                 
@@ -127,6 +145,8 @@ class Stage1VoiceAgent:
                                 if current_time - self.last_audio_time >= self.buffer_duration:
                                     # #region debug log
                                     logger.info("DEBUG: Buffer ready for processing", buffer_size=len(self.audio_buffer), hypothesis="F")
+                                    with open('/Users/user/Fortell_AI_Product/.cursor/debug.log', 'a') as f:
+                                        f.write(json.dumps({"location":"main.py:127","message":"Buffer ready for processing","data":{"buffer_size":len(self.audio_buffer),"buffer_duration":self.buffer_duration},"timestamp":current_time,"sessionId":"debug-session","runId":"run1","hypothesisId":"H2"}) + "\n")
                                     # #endregion
                                     # Process buffer (don't await here to avoid blocking)
                                     asyncio.create_task(self.process_audio_buffer())
@@ -135,6 +155,9 @@ class Stage1VoiceAgent:
                                     
                             except Exception as e:
                                 logger.error("Error processing audio frame", error=str(e))
+                                import json
+                                with open('/Users/user/Fortell_AI_Product/.cursor/debug.log', 'a') as f:
+                                    f.write(json.dumps({"location":"main.py:137","message":"Error processing audio frame","data":{"error":str(e)},"timestamp":asyncio.get_event_loop().time(),"sessionId":"debug-session","runId":"run1","hypothesisId":"H2"}) + "\n")
                     # #region debug log
                     logger.info("DEBUG: Audio stream iteration ended", total_frames=frame_count, hypothesis="F")
                     # #endregion
@@ -204,22 +227,56 @@ class Stage1VoiceAgent:
             # #endregion
             
             # Step 1: Speech-to-Text
+            # #region debug log
+            import json
+            with open('/Users/user/Fortell_AI_Product/.cursor/debug.log', 'a') as f:
+                f.write(json.dumps({"location":"main.py:207","message":"Calling STT transcribe","data":{"audio_size":len(combined_audio)},"timestamp":asyncio.get_event_loop().time(),"sessionId":"debug-session","runId":"run1","hypothesisId":"H3"}) + "\n")
+            # #endregion
+            
             user_text = await self.stt_service.transcribe(combined_audio)
+            
+            # #region debug log
+            with open('/Users/user/Fortell_AI_Product/.cursor/debug.log', 'a') as f:
+                f.write(json.dumps({"location":"main.py:210","message":"STT transcribe completed","data":{"user_text":user_text[:100] if user_text else None,"text_length":len(user_text) if user_text else 0},"timestamp":asyncio.get_event_loop().time(),"sessionId":"debug-session","runId":"run1","hypothesisId":"H3"}) + "\n")
+            # #endregion
             
             if not user_text or len(user_text.strip()) < 2:
                 logger.debug("No meaningful text transcribed")
+                with open('/Users/user/Fortell_AI_Product/.cursor/debug.log', 'a') as f:
+                    f.write(json.dumps({"location":"main.py:213","message":"STT returned empty or short text","data":{"user_text":user_text},"timestamp":asyncio.get_event_loop().time(),"sessionId":"debug-session","runId":"run1","hypothesisId":"H3"}) + "\n")
                 return
             
             logger.info("User said", text=user_text[:100])
             
             # Step 2: LLM Response (simple single prompt, no state machine)
+            # #region debug log
+            import json
+            with open('/Users/user/Fortell_AI_Product/.cursor/debug.log', 'a') as f:
+                f.write(json.dumps({"location":"main.py:216","message":"Calling LLM get_llm_response","data":{"user_text":user_text[:100]},"timestamp":asyncio.get_event_loop().time(),"sessionId":"debug-session","runId":"run1","hypothesisId":"H4"}) + "\n")
+            # #endregion
+            
             response_text = await self.get_llm_response(user_text)
+            
+            # #region debug log
+            with open('/Users/user/Fortell_AI_Product/.cursor/debug.log', 'a') as f:
+                f.write(json.dumps({"location":"main.py:220","message":"LLM response received","data":{"response_text":response_text[:100] if response_text else None,"response_length":len(response_text) if response_text else 0},"timestamp":asyncio.get_event_loop().time(),"sessionId":"debug-session","runId":"run1","hypothesisId":"H4"}) + "\n")
+            # #endregion
             
             if not response_text:
                 response_text = "I'm sorry, I didn't understand. Could you repeat that?"
             
             # Step 3: Text-to-Speech
+            # #region debug log
+            with open('/Users/user/Fortell_AI_Product/.cursor/debug.log', 'a') as f:
+                f.write(json.dumps({"location":"main.py:225","message":"Calling TTS say","data":{"response_text":response_text[:100]},"timestamp":asyncio.get_event_loop().time(),"sessionId":"debug-session","runId":"run1","hypothesisId":"H5"}) + "\n")
+            # #endregion
+            
             await self.say(response_text)
+            
+            # #region debug log
+            with open('/Users/user/Fortell_AI_Product/.cursor/debug.log', 'a') as f:
+                f.write(json.dumps({"location":"main.py:228","message":"TTS say completed","data":{},"timestamp":asyncio.get_event_loop().time(),"sessionId":"debug-session","runId":"run1","hypothesisId":"H5"}) + "\n")
+            # #endregion
             
             # Store in conversation history (for context)
             self.conversation_history.append({"role": "user", "content": user_text})
@@ -258,12 +315,29 @@ class Stage1VoiceAgent:
         """Synthesize and speak text"""
         try:
             logger.info("Agent responding", text=text[:100])
+            
+            # #region debug log
+            import json
+            with open('/Users/user/Fortell_AI_Product/.cursor/debug.log', 'a') as f:
+                f.write(json.dumps({"location":"main.py:260","message":"TTS synthesize called","data":{"text":text[:100]},"timestamp":asyncio.get_event_loop().time(),"sessionId":"debug-session","runId":"run1","hypothesisId":"H5"}) + "\n")
+            # #endregion
+            
             audio_data = await self.tts_service.synthesize(text)
+            
+            # #region debug log
+            with open('/Users/user/Fortell_AI_Product/.cursor/debug.log', 'a') as f:
+                f.write(json.dumps({"location":"main.py:265","message":"TTS synthesize completed","data":{"audio_data_size":len(audio_data) if audio_data else 0,"has_audio_source":self.audio_source is not None},"timestamp":asyncio.get_event_loop().time(),"sessionId":"debug-session","runId":"run1","hypothesisId":"H5"}) + "\n")
+            # #endregion
             
             if audio_data and self.audio_source:
                 import numpy as np
                 audio_array = np.frombuffer(audio_data, dtype=np.int16)
                 samples = len(audio_array)
+                
+                # #region debug log
+                with open('/Users/user/Fortell_AI_Product/.cursor/debug.log', 'a') as f:
+                    f.write(json.dumps({"location":"main.py:270","message":"Preparing audio frame for capture","data":{"samples":samples},"timestamp":asyncio.get_event_loop().time(),"sessionId":"debug-session","runId":"run1","hypothesisId":"H5"}) + "\n")
+                # #endregion
                 
                 audio_frame = rtc.AudioFrame(
                     data=audio_array.tobytes(),
@@ -272,9 +346,18 @@ class Stage1VoiceAgent:
                     samples_per_channel=samples
                 )
                 await self.audio_source.capture_frame(audio_frame)
+                
+                # #region debug log
+                with open('/Users/user/Fortell_AI_Product/.cursor/debug.log', 'a') as f:
+                    f.write(json.dumps({"location":"main.py:279","message":"Audio frame captured successfully","data":{"samples":samples},"timestamp":asyncio.get_event_loop().time(),"sessionId":"debug-session","runId":"run1","hypothesisId":"H5"}) + "\n")
+                # #endregion
+                
                 logger.debug("Audio response sent", text_length=len(text), samples=samples)
         except Exception as e:
             logger.error("Error synthesizing speech", error=str(e))
+            import json
+            with open('/Users/user/Fortell_AI_Product/.cursor/debug.log', 'a') as f:
+                f.write(json.dumps({"location":"main.py:283","message":"Error in say()","data":{"error":str(e)},"timestamp":asyncio.get_event_loop().time(),"sessionId":"debug-session","runId":"run1","hypothesisId":"H5"}) + "\n")
 
 
 async def entrypoint(ctx: JobContext):
