@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
+import { RoomServiceClient, AgentServiceClient } from 'livekit-server-sdk'
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,20 +49,17 @@ export async function POST(request: NextRequest) {
       const livekitApiUrl = livekitUrl.replace('wss://', 'https://')
       const dispatchUrl = `${livekitApiUrl}/twirp/livekit.AgentService/CreateAgentDispatch`
       
-      // Try both agent_name and agent_id
-      // CLI uses agent_name, but API might need agent_id
+      // Use ONLY agent_name (matching CLI dispatch which works)
+      // CLI dispatch uses only agent_name, not agent_id
       const agentName = 'appointment-scheduler'
-      const agentId = 'CA_ZzqAYfvCTYjs' // From livekit.toml
       
-      // Try agent_id first (API dispatch might require it)
+      // Match CLI dispatch exactly - use only agent_name
       const dispatchBody = {
         room: room_name,
-        agent_id: agentId, // Use agent_id for API dispatch
-        // Also include agent_name as fallback
-        agent_name: agentName,
+        agent_name: agentName, // Use ONLY agent_name (like CLI)
       }
       
-      console.log('[DISPATCH] Using agent_id for dispatch:', { agentId, agentName })
+      console.log('[DISPATCH] Using agent_name only (matching CLI):', { agentName, room: room_name })
       
       // #region debug log
       fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dispatch-agent/route.ts:55',message:'Using agent_name for dispatch',data:{agentName,dispatchBody},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
