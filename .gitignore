@@ -89,3 +89,6 @@ local/
 temp/
 tmp/
 
+# Documentation (excluded from repo)
+docs/03_Project_Presentation_Thought_Process.md
+

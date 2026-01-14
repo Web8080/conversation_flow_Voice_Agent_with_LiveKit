@@ -104,55 +104,219 @@ class GoogleLLMService(LLMService):
     def __init__(self):
         if not settings.google_api_key:
             raise ValueError("Google API key not configured")
+        self.api_key = settings.google_api_key
+        # Use REST API directly to avoid deprecated package issues
+        # Use v1beta as it supports more models
+        self.base_url = "https://generativelanguage.googleapis.com/v1beta"
+        
+        # Discover available models by calling ListModels API
+        self.models_to_try = self._discover_available_models()
+        
+        if not self.models_to_try:
+            # Fallback to common model names if discovery fails
+            logger.warning("Failed to discover models, using fallback list")
+            self.models_to_try = [
+                "gemini-pro",
+                "gemini-1.5-flash",
+                "gemini-1.5-pro"
+            ]
+        
+        logger.info("Initialized Google Gemini LLM service (using REST API)", 
+                   models=self.models_to_try)
+    
+    def _discover_available_models(self) -> list:
+        """Call ListModels API to discover available models"""
         try:
-            import google.generativeai as genai
-            genai.configure(api_key=settings.google_api_key)
-            self.model = genai.GenerativeModel("gemini-1.5-flash")
-            logger.info("Initialized Google Gemini LLM service", model="gemini-1.5-flash")
-        except ImportError:
-            raise ValueError("google-generativeai not installed. Run: pip install google-generativeai")
+            import asyncio
+            import httpx
+            
+            url = f"{self.base_url}/models"
+            headers = {"Content-Type": "application/json"}
+            
+            # Use sync call in __init__ (we'll make it async if needed)
+            import httpx as sync_httpx
+            with sync_httpx.Client(timeout=10.0) as client:
+                response = client.get(
+                    url,
+                    headers=headers,
+                    params={"key": self.api_key}
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    models = []
+                    if "models" in data:
+                        for model in data["models"]:
+                            name = model.get("name", "")
+                            # Extract model name (format: "models/gemini-pro")
+                            if name.startswith("models/"):
+                                model_name = name.replace("models/", "")
+                                # Only include models that support generateContent
+                                supported_methods = model.get("supportedGenerationMethods", [])
+                                if "generateContent" in supported_methods:
+                                    models.append(model_name)
+                    
+                    logger.info("Discovered available Google Gemini models", 
+                               models=models, 
+                               total=len(models))
+                    return models
+                else:
+                    logger.warning("Failed to list models", 
+                                 status_code=response.status_code,
+                                 error=response.text[:200])
+                    return []
+        except Exception as e:
+            logger.warning("Error discovering models", error=str(e))
+            return []
     
     async def generate_response(self, user_text: str, context: Optional[Dict[str, Any]] = None) -> Optional[str]:
         try:
-            import google.generativeai as genai
+            import json
             
-            # Build prompt with system message and history
-            prompt_parts = []
+            # Build messages for chat format (REST API v1beta uses chat format)
+            messages = []
             
             if context:
                 system_prompt = context.get("system_prompt", "You are a helpful voice assistant.")
-                prompt_parts.append(system_prompt)
+                # Add system instruction as first message
+                messages.append({
+                    "role": "user",
+                    "parts": [{"text": system_prompt}]
+                })
+                messages.append({
+                    "role": "model",
+                    "parts": [{"text": "I understand. I'm ready to help."}]
+                })
                 
                 conversation_history = context.get("history", [])
                 for msg in conversation_history:
                     role = msg.get("role", "user")
                     content = msg.get("content", "")
-                    if role == "system":
-                        prompt_parts.append(f"System: {content}")
-                    elif role == "user":
-                        prompt_parts.append(f"User: {content}")
+                    if role == "user":
+                        messages.append({
+                            "role": "user",
+                            "parts": [{"text": content}]
+                        })
                     elif role == "assistant":
-                        prompt_parts.append(f"Assistant: {content}")
+                        messages.append({
+                            "role": "model",
+                            "parts": [{"text": content}]
+                        })
             
-            prompt_parts.append(f"User: {user_text}")
-            prompt = "\n".join(prompt_parts)
+            # Add current user message
+            messages.append({
+                "role": "user",
+                "parts": [{"text": user_text}]
+            })
             
-            loop = asyncio.get_event_loop()
-            response = await loop.run_in_executor(
-                None,
-                lambda: self.model.generate_content(
-                    prompt,
-                    generation_config=genai.types.GenerationConfig(
-                        temperature=settings.llm_temperature,
-                        max_output_tokens=settings.llm_max_tokens,
-                    )
-                )
-            )
-            text = response.text
-            logger.info("Google Gemini LLM response generated", response_length=len(text))
-            return text.strip()
+            logger.info("DEBUG: Calling Google Gemini REST API",
+                       models_to_try=self.models_to_try,
+                       prompt_length=len(user_text),
+                       user_text=user_text[:100],
+                       messages_count=len(messages),
+                       has_context=context is not None,
+                       hypothesis="LLM_GOOGLE_CALL")
+            
+            # Try each model in order
+            last_error = None
+            response_data = None
+            
+            for model_name in self.models_to_try:
+                try:
+                    logger.info("DEBUG: Trying Google Gemini model via REST API",
+                               model=model_name,
+                               hypothesis="LLM_GOOGLE_MODEL_TRY")
+                    
+                    # Use the correct API endpoint format
+                    # For REST API, model names should be in format: models/gemini-1.5-flash
+                    url = f"{self.base_url}/models/{model_name}:generateContent"
+                    payload = {
+                        "contents": messages,
+                        "generationConfig": {
+                            "temperature": settings.llm_temperature,
+                            "maxOutputTokens": settings.llm_max_tokens,
+                        }
+                    }
+                    
+                    headers = {
+                        "Content-Type": "application/json",
+                    }
+                    
+                    # Use httpx for async HTTP requests
+                    async with httpx.AsyncClient(timeout=30.0) as client:
+                        response = await client.post(
+                            url,
+                            json=payload,
+                            headers=headers,
+                            params={"key": self.api_key}
+                        )
+                        
+                        logger.info("DEBUG: Google Gemini REST API response",
+                                   model=model_name,
+                                   status_code=response.status_code,
+                                   hypothesis="LLM_GOOGLE_RESPONSE")
+                        
+                        if response.status_code == 200:
+                            response_data = response.json()
+                            logger.info("DEBUG: Google Gemini REST API success",
+                                       model=model_name,
+                                       hypothesis="LLM_GOOGLE_SUCCESS")
+                            break
+                        else:
+                            error_text = response.text[:200]
+                            logger.warning("DEBUG: Google Gemini REST API failed",
+                                         model=model_name,
+                                         status_code=response.status_code,
+                                         error=error_text,
+                                         hypothesis="LLM_GOOGLE_MODEL_FAILED")
+                            last_error = Exception(f"HTTP {response.status_code}: {error_text}")
+                            continue
+                            
+                except Exception as model_error:
+                    logger.warning("DEBUG: Google Gemini model request failed",
+                                 model=model_name,
+                                 error=str(model_error),
+                                 error_type=type(model_error).__name__,
+                                 hypothesis="LLM_GOOGLE_MODEL_FAILED")
+                    last_error = model_error
+                    continue
+            
+            if response_data is None:
+                raise last_error if last_error else Exception("All Google Gemini models failed")
+            
+            # Extract text from response
+            # Response format: {"candidates": [{"content": {"parts": [{"text": "..."}]}}]}
+            if "candidates" in response_data and len(response_data["candidates"]) > 0:
+                candidate = response_data["candidates"][0]
+                if "content" in candidate and "parts" in candidate["content"]:
+                    parts = candidate["content"]["parts"]
+                    if len(parts) > 0 and "text" in parts[0]:
+                        text = parts[0]["text"]
+                        
+                        logger.info("DEBUG: Google Gemini text extracted",
+                                   text=text[:100] if text else "None",
+                                   text_length=len(text) if text else 0,
+                                   hypothesis="LLM_GOOGLE_SUCCESS")
+                        
+                        if not text or len(text.strip()) == 0:
+                            logger.warning("DEBUG: Google Gemini returned empty text",
+                                         hypothesis="LLM_GOOGLE_EMPTY")
+                            return None
+                        
+                        logger.info("Google Gemini LLM response generated", response_length=len(text))
+                        return text.strip()
+            
+            logger.error("DEBUG: Google Gemini response has unexpected format",
+                       response_data_keys=list(response_data.keys()) if isinstance(response_data, dict) else None,
+                       hypothesis="LLM_GOOGLE_FORMAT_ERROR")
+            return None
+            
         except Exception as e:
-            logger.error("Google Gemini LLM request failed", error=str(e))
+            logger.error("DEBUG: Google Gemini LLM request failed with exception",
+                        error=str(e),
+                        error_type=type(e).__name__,
+                        error_traceback=str(e.__traceback__) if hasattr(e, '__traceback__') else None,
+                        hypothesis="LLM_GOOGLE_ERROR")
             return None
 
 
@@ -195,6 +359,54 @@ class OpenAILLMService(LLMService):
             return None
 
 
+class LLMFallbackService(LLMService):
+    """Wrapper service that tries multiple LLM providers with runtime fallback"""
+    def __init__(self, primary: LLMService, fallbacks: List[LLMService]):
+        self.primary = primary
+        self.fallbacks = fallbacks
+        logger.info("Initialized LLM fallback service", 
+                   primary=type(primary).__name__,
+                   fallbacks=[type(f).__name__ for f in fallbacks])
+    
+    async def generate_response(self, user_text: str, context: Optional[Dict[str, Any]] = None) -> Optional[str]:
+        # Try primary first
+        try:
+            logger.info("DEBUG: Trying primary LLM", provider=type(self.primary).__name__, hypothesis="LLM_FALLBACK_PRIMARY")
+            result = await self.primary.generate_response(user_text, context)
+            if result:
+                logger.info("DEBUG: Primary LLM succeeded", provider=type(self.primary).__name__, hypothesis="LLM_FALLBACK_SUCCESS")
+                return result
+            else:
+                logger.warning("DEBUG: Primary LLM returned None, trying fallback", provider=type(self.primary).__name__, hypothesis="LLM_FALLBACK_NONE")
+        except Exception as e:
+            logger.warning("DEBUG: Primary LLM failed, trying fallback",
+                         provider=type(self.primary).__name__,
+                         error=str(e),
+                         error_type=type(e).__name__,
+                         hypothesis="LLM_FALLBACK_ERROR")
+        
+        # Try fallbacks in order
+        for fallback in self.fallbacks:
+            try:
+                logger.info("DEBUG: Trying fallback LLM", provider=type(fallback).__name__, hypothesis="LLM_FALLBACK_TRY")
+                result = await fallback.generate_response(user_text, context)
+                if result:
+                    logger.info("DEBUG: Fallback LLM succeeded", provider=type(fallback).__name__, hypothesis="LLM_FALLBACK_SUCCESS")
+                    return result
+                else:
+                    logger.warning("DEBUG: Fallback LLM returned None", provider=type(fallback).__name__, hypothesis="LLM_FALLBACK_NONE")
+            except Exception as e:
+                logger.warning("DEBUG: Fallback LLM failed",
+                             provider=type(fallback).__name__,
+                             error=str(e),
+                             error_type=type(e).__name__,
+                             hypothesis="LLM_FALLBACK_ERROR")
+                continue
+        
+        logger.error("DEBUG: All LLM providers failed", hypothesis="LLM_FALLBACK_ALL_FAILED")
+        return None
+
+
 def create_llm_service() -> LLMService:
     """
     Creates LLM service with fallback strategy:
@@ -205,43 +417,44 @@ def create_llm_service() -> LLMService:
     
     # Google Gemini is primary (if API key configured)
     if settings.google_api_key:
-        providers.append(("google", GoogleLLMService))
+        try:
+            providers.append(("google", GoogleLLMService()))
+        except Exception as e:
+            logger.warning("Google LLM not available", error=str(e))
     
     # OpenAI is fallback (high quality, production-ready)
     if settings.openai_api_key:
-        providers.append(("openai", OpenAILLMService))
+        try:
+            providers.append(("openai", OpenAILLMService()))
+        except Exception as e:
+            logger.warning("OpenAI LLM not available", error=str(e))
     
     # Ollama is fallback (local, free, reliable)
     try:
-        # Try to connect to Ollama to verify it's available
-        providers.append(("ollama", OllamaLLMService))
-    except Exception:
-        logger.warning("Ollama not available for fallback")
+        providers.append(("ollama", OllamaLLMService()))
+    except Exception as e:
+        logger.warning("Ollama not available", error=str(e))
     
     # Groq is optional (very fast, but requires API key)
     if settings.groq_api_key:
-        providers.append(("groq", GroqLLMService))
+        try:
+            providers.append(("groq", GroqLLMService()))
+        except Exception as e:
+            logger.warning("Groq LLM not available", error=str(e))
     
     if not providers:
         raise ValueError("No LLM provider configured. Please set up at least Google, OpenAI, or Ollama.")
     
-    # Use primary provider (Google if available, otherwise first available)
-    primary_provider_name, primary_provider_class = providers[0]
-    logger.info("Using primary LLM provider", provider=primary_provider_name, fallbacks=[p[0] for p in providers[1:]])
+    # If only one provider, return it directly
+    if len(providers) == 1:
+        logger.info("Using LLM provider", provider=providers[0][0])
+        return providers[0][1]
     
-    try:
-        return primary_provider_class()
-    except Exception as e:
-        logger.warning("Primary LLM provider failed, trying fallback", provider=primary_provider_name, error=str(e))
-        # Try fallback providers in order
-        for fallback_name, fallback_class in providers[1:]:
-            try:
-                logger.info("Trying fallback LLM provider", provider=fallback_name)
-                return fallback_class()
-            except Exception as fallback_error:
-                logger.warning("Fallback provider also failed", provider=fallback_name, error=str(fallback_error))
-                continue
-        
-        # All providers failed
-        raise RuntimeError(f"All LLM providers failed. Primary: {primary_provider_name}, Fallbacks tried: {[p[0] for p in providers[1:]]}")
+    # Multiple providers: use first as primary, rest as fallbacks
+    primary = providers[0][1]
+    fallbacks = [p[1] for p in providers[1:]]
+    logger.info("Using LLM provider with runtime fallback", 
+               primary=providers[0][0],
+               fallbacks=[p[0] for p in providers[1:]])
+    return LLMFallbackService(primary, fallbacks)
 

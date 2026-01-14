@@ -227,12 +227,18 @@ Return only the time in HH:MM format (e.g., "14:00" for 2 PM), or empty string i
 class ConfirmationState(ConversationState):
     def __init__(self):
         super().__init__("confirmation", "Confirm appointment details")
+        self.calendar_service = None
+    
+    def set_calendar_service(self, calendar_service):
+        """Set calendar service for booking appointments"""
+        self.calendar_service = calendar_service
     
     def get_prompt(self, context: ConversationContext) -> str:
         name = context.get_slot("name") or "you"
         date = context.get_slot("date") or "the selected date"
         time = context.get_slot("time") or "the selected time"
-        return f"Just to confirm: {name}, you want to schedule an appointment on {date} at {time}. Is this correct? Please say yes or no."
+        appointment_type = context.get_slot("appointment_type") or "appointment"
+        return f"Just to confirm: {name}, you want to schedule a {appointment_type} on {date} at {time}. Is this correct? Please say yes or no."
     
     async def handle_input(
         self, 
@@ -245,15 +251,58 @@ class ConfirmationState(ConversationState):
         confirmed = await self._extract_confirmation(user_text, context, llm_service)
         
         if confirmed:
+            # Book the appointment
+            appointment_booked = False
+            event_details = None
+            
+            if self.calendar_service and self.calendar_service.is_enabled():
+                try:
+                    from datetime import date as date_type, time as time_type
+                    import dateutil.parser
+                    
+                    date_str = context.get_slot("date")
+                    time_str = context.get_slot("time")
+                    name = context.get_slot("name") or "Guest"
+                    appointment_type = context.get_slot("appointment_type") or "Appointment"
+                    
+                    if date_str and time_str:
+                        # Parse date and time
+                        appointment_date = dateutil.parser.parse(date_str).date() if isinstance(date_str, str) else date_str
+                        appointment_time = dateutil.parser.parse(time_str).time() if isinstance(time_str, str) else time_str
+                        
+                        # Create appointment in calendar
+                        event_details = await self.calendar_service.create_appointment(
+                            appointment_date=appointment_date,
+                            appointment_time=appointment_time,
+                            summary=f"{appointment_type} - {name}",
+                            description=f"Appointment scheduled via voice agent for {name}",
+                            duration_minutes=30
+                        )
+                        
+                        if event_details:
+                            appointment_booked = True
+                            context.update_slot("event_id", event_details.get('event_id'))
+                            context.update_slot("calendar_link", event_details.get('html_link'))
+                            logger.info("Appointment booked successfully", event_id=event_details.get('event_id'))
+                except Exception as e:
+                    logger.error("Failed to book appointment", error=str(e))
+            
+            # Generate response
             name = context.get_slot("name") or "you"
             date = context.get_slot("date") or "the selected date"
             time = context.get_slot("time") or "the selected time"
-            response_text = f"Perfect! Your appointment is confirmed for {name} on {date} at {time}. Thank you, and have a great day!"
+            
+            if appointment_booked and event_details:
+                response_text = f"Perfect! Your appointment is confirmed for {name} on {date} at {time}. I've added it to your calendar. Thank you, and have a great day!"
+            else:
+                response_text = f"Perfect! Your appointment is confirmed for {name} on {date} at {time}. Thank you, and have a great day!"
+            
             context.add_turn(Turn(role="agent", text=response_text))
             return StateResponse(
                 next_state="terminal",
                 response_text=response_text,
-                should_continue=False
+                should_continue=False,
+                extracted_slots={"appointment_booked": appointment_booked, "event_details": event_details}
             )
         else:
             response_text = "No problem. Let's start over. What date would you like to schedule your appointment?"
@@ -285,9 +334,13 @@ Return only "yes" or "no"."""
 class FallbackState(ConversationState):
     def __init__(self):
         super().__init__("fallback", "Handle unclear input or errors")
+        self.max_retries = 3
     
     def get_prompt(self, context: ConversationContext) -> str:
-        return "I'm having trouble understanding. Could you please repeat that?"
+        retry_count = context.retry_count
+        if retry_count >= self.max_retries:
+            return "I'm having trouble understanding. Let me connect you with a human agent who can better assist you."
+        return f"I'm having trouble understanding. Could you please repeat that? (Attempt {retry_count + 1} of {self.max_retries})"
     
     async def handle_input(
         self, 
@@ -296,15 +349,30 @@ class FallbackState(ConversationState):
         llm_service
     ) -> StateResponse:
         context.add_turn(Turn(role="user", text=user_text))
+        context.increment_retry_count()
         
+        # If max retries reached, go to terminal
+        if context.retry_count >= self.max_retries:
+            response_text = "I'm having trouble understanding. Let me connect you with a human agent who can better assist you. Thank you for your patience."
+            context.add_turn(Turn(role="agent", text=response_text))
+            return StateResponse(
+                next_state="terminal",
+                response_text=response_text,
+                should_continue=False
+            )
+        
+        # Try to return to previous state
         previous_state = context.current_state or "greeting"
-        response_text = "Let me connect you with a human agent who can better assist you. Thank you for your patience."
+        if previous_state == "fallback":
+            previous_state = "greeting"  # Default fallback
+        
+        response_text = self.get_prompt(context)
         context.add_turn(Turn(role="agent", text=response_text))
         
         return StateResponse(
-            next_state="terminal",
+            next_state=previous_state,
             response_text=response_text,
-            should_continue=False
+            should_continue=True
         )
 
 
@@ -313,6 +381,10 @@ class TerminalState(ConversationState):
         super().__init__("terminal", "End conversation")
     
     def get_prompt(self, context: ConversationContext) -> str:
+        # Check if appointment was successfully booked
+        appointment_booked = context.get_slot("appointment_booked")
+        if appointment_booked:
+            return "Thank you for using our service. Your appointment has been confirmed. Goodbye!"
         return "Thank you for using our service. Goodbye!"
     
     async def handle_input(
@@ -321,7 +393,24 @@ class TerminalState(ConversationState):
         context: ConversationContext,
         llm_service
     ) -> StateResponse:
-        response_text = "The conversation has ended. Thank you!"
+        # Terminal state - conversation has ended
+        # Check if user is trying to restart
+        user_lower = user_text.lower().strip()
+        restart_keywords = ["restart", "start over", "new appointment", "again", "reset"]
+        
+        if any(keyword in user_lower for keyword in restart_keywords):
+            # Reset conversation and go back to greeting
+            context.slots.clear()
+            context.reset_retry_count()
+            response_text = "Sure! Let's start over. How can I help you schedule an appointment today?"
+            return StateResponse(
+                next_state="greeting",
+                response_text=response_text,
+                should_continue=True
+            )
+        
+        # Otherwise, confirm conversation has ended
+        response_text = "The conversation has ended. Thank you! If you need to schedule another appointment, please start a new conversation."
         return StateResponse(
             next_state=None,
             response_text=response_text,

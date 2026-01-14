@@ -172,6 +172,20 @@ class Stage1VoiceAgent:
                             continue
                         
                         try:
+                            # Log audio frame format on first frame
+                            if frame_count == 1:
+                                sample_rate = getattr(audio_frame, 'sample_rate', None)
+                                num_channels = getattr(audio_frame, 'num_channels', None)
+                                samples_per_channel = getattr(audio_frame, 'samples_per_channel', None)
+                                data_size = len(audio_frame.data.tobytes()) if hasattr(audio_frame, 'data') else None
+                                logger.info("DEBUG: First audio frame format", 
+                                           sample_rate=sample_rate,
+                                           num_channels=num_channels,
+                                           samples_per_channel=samples_per_channel,
+                                           data_size=data_size,
+                                           frame_type=type(audio_frame).__name__,
+                                           hypothesis="AUDIO_FORMAT")
+                            
                             self.audio_buffer.append(audio_frame)
                             current_time = asyncio.get_event_loop().time()
                             
@@ -268,6 +282,34 @@ class Stage1VoiceAgent:
         logger.info("DEBUG: Processing audio buffer", buffer_size=len(buffer_to_process), hypothesis="H2")
         
         try:
+            # Log audio frame format before combining
+            sample_rate = None
+            num_channels = None
+            if buffer_to_process:
+                first_frame = buffer_to_process[0]
+                sample_rate = getattr(first_frame, 'sample_rate', None)
+                num_channels = getattr(first_frame, 'num_channels', None)
+                logger.info("DEBUG: Audio buffer format before combining",
+                           sample_rate=sample_rate,
+                           num_channels=num_channels,
+                           frame_count=len(buffer_to_process),
+                           first_frame_type=type(first_frame).__name__,
+                           first_frame_attrs=[a for a in dir(first_frame) if not a.startswith('_')][:10],
+                           hypothesis="AUDIO_FORMAT")
+            
+            # Validate audio format parameters
+            if not sample_rate or sample_rate <= 0:
+                logger.error("DEBUG: Invalid sample_rate", 
+                           sample_rate=sample_rate,
+                           hypothesis="AUDIO_INVALID")
+                return
+            
+            if not num_channels or num_channels <= 0:
+                logger.error("DEBUG: Invalid num_channels", 
+                           num_channels=num_channels,
+                           hypothesis="AUDIO_INVALID")
+                return
+            
             # Combine audio frames
             combined_audio = buffer_to_process[0].data.tobytes()
             for frame in buffer_to_process[1:]:
@@ -278,18 +320,40 @@ class Stage1VoiceAgent:
             # #endregion
             
             # Step 1: Speech-to-Text
-            logger.info("DEBUG: Calling STT transcribe", audio_size=len(combined_audio), hypothesis="H3")
+            logger.info("DEBUG: Calling STT transcribe", 
+                       audio_size=len(combined_audio),
+                       sample_rate=sample_rate,
+                       num_channels=num_channels,
+                       hypothesis="STT_CALL")
             
-            user_text = await self.stt_service.transcribe(combined_audio)
+            # Pass sample_rate and num_channels to STT service
+            user_text = await self.stt_service.transcribe(combined_audio, sample_rate, num_channels)
             
             logger.info("DEBUG: STT transcribe completed", 
-                       user_text=user_text[:100] if user_text else None,
+                       user_text=user_text if user_text else "None",
+                       user_text_repr=repr(user_text) if user_text else "None",
                        text_length=len(user_text) if user_text else 0,
-                       hypothesis="H3")
+                       text_stripped_length=len(user_text.strip()) if user_text else 0,
+                       hypothesis="STT_RESULT")
             
-            if not user_text or len(user_text.strip()) < 2:
-                logger.debug("No meaningful text transcribed", user_text=user_text, hypothesis="H3")
+            if not user_text:
+                logger.warning("DEBUG: STT returned None - returning early", 
+                             hypothesis="STT_NONE")
                 return
+            
+            if len(user_text.strip()) < 2:
+                logger.warning("DEBUG: STT returned text too short - returning early", 
+                             user_text=user_text,
+                             user_text_repr=repr(user_text),
+                             text_length=len(user_text),
+                             text_stripped_length=len(user_text.strip()),
+                             hypothesis="STT_TOO_SHORT")
+                return
+            
+            logger.info("DEBUG: User text passed validation", 
+                       user_text=user_text[:100],
+                       text_length=len(user_text),
+                       hypothesis="STT_VALID")
             
             logger.info("User said", text=user_text[:100])
             
@@ -307,16 +371,22 @@ class Stage1VoiceAgent:
                 logger.warning("Failed to send user transcription", error=str(e))
             
             # Step 2: LLM Response (simple single prompt, no state machine)
-            logger.info("DEBUG: Calling LLM get_llm_response", user_text=user_text[:100], hypothesis="H4")
+            logger.info("DEBUG: Calling LLM get_llm_response", 
+                       user_text=user_text[:100],
+                       user_text_full=user_text,
+                       hypothesis="LLM_CALL")
             
             response_text = await self.get_llm_response(user_text)
             
             logger.info("DEBUG: LLM response received", 
-                       response_text=response_text[:100] if response_text else None,
+                       response_text=response_text if response_text else "None",
+                       response_text_repr=repr(response_text) if response_text else "None",
                        response_length=len(response_text) if response_text else 0,
-                       hypothesis="H4")
+                       hypothesis="LLM_RESULT")
             
             if not response_text:
+                logger.warning("DEBUG: LLM returned empty response - using fallback", 
+                             hypothesis="LLM_EMPTY")
                 response_text = "I'm sorry, I didn't understand. Could you repeat that?"
             
             # Send agent transcription to frontend via data message
@@ -354,10 +424,20 @@ class Stage1VoiceAgent:
     async def get_llm_response(self, user_text: str) -> str:
         """Get LLM response with simple single prompt"""
         try:
+            logger.info("DEBUG: Building LLM messages", 
+                       user_text=user_text,
+                       history_length=len(self.conversation_history),
+                       hypothesis="LLM_BUILD")
+            
             # Build messages with system prompt and conversation history
             messages = [{"role": "system", "content": STAGE1_SYSTEM_PROMPT}]
             messages.extend(self.conversation_history)
             messages.append({"role": "user", "content": user_text})
+            
+            logger.info("DEBUG: Messages built", 
+                       total_messages=len(messages),
+                       last_user_message=messages[-1]["content"] if messages else None,
+                       hypothesis="LLM_BUILD")
             
             # Call LLM service
             context = {
@@ -365,11 +445,26 @@ class Stage1VoiceAgent:
                 "history": self.conversation_history
             }
             
+            logger.info("DEBUG: Calling LLM service generate_response", 
+                       user_text=user_text,
+                       hypothesis="LLM_GENERATE")
+            
             response = await self.llm_service.generate_response(user_text, context)
+            
+            logger.info("DEBUG: LLM service returned", 
+                       response=response if response else "None",
+                       response_repr=repr(response) if response else "None",
+                       response_type=type(response).__name__,
+                       hypothesis="LLM_RETURN")
+            
             return response if response else None
             
         except Exception as e:
-            logger.error("LLM response failed", error=str(e))
+            logger.error("DEBUG: LLM response failed with exception", 
+                        error=str(e),
+                        error_type=type(e).__name__,
+                        error_traceback=str(e.__traceback__) if hasattr(e, '__traceback__') else None,
+                        hypothesis="LLM_ERROR")
             return None
     
     async def say(self, text: str):
@@ -409,13 +504,20 @@ class Stage1VoiceAgent:
 
 
 async def entrypoint(ctx: JobContext):
-    """Main entrypoint for Stage 1 agent"""
+    """Main entrypoint - routes to Stage 1 or Stage 2 based on configuration"""
     # #region debug log
     logger.info("DEBUG: Agent entrypoint called", 
                 room=ctx.room.name,
                 room_id=ctx.room.sid if hasattr(ctx.room, 'sid') else None,
                 hypothesis="D")
     # #endregion
+    
+    # Route to Stage 2 if configured, otherwise use Stage 1
+    if settings.agent_stage == "stage2":
+        logger.info("Routing to Stage 2 agent", room=ctx.room.name)
+        from main_stage2 import entrypoint as stage2_entrypoint
+        await stage2_entrypoint(ctx)
+        return
     
     logger.info("Stage 1 agent started", room=ctx.room.name)
     

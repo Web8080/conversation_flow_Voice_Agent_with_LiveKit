@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     max_retry_attempts: int = 3
     conversation_timeout: int = 300
     audio_buffer_duration: float = 2.0  # seconds
+    agent_stage: str = "stage1"  # stage1 or stage2
     
     # LLM Configuration
     llm_temperature: float = 0.7

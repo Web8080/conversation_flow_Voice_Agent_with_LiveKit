@@ -27,7 +27,7 @@ export default function StateProgressIndicator({
     const stateIndex = stateOrder.indexOf(state.id)
     return {
       ...state,
-      completed: stateIndex >= 0 && stateIndex < currentIndex,
+      completed: stateIndex >= 0 && currentIndex >= 0 && stateIndex < currentIndex,
       current: state.id === currentState,
     }
   })

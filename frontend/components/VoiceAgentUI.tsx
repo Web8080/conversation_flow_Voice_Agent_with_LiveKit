@@ -143,7 +143,12 @@ export default function VoiceAgentUI() {
         try {
           const data = JSON.parse(new TextDecoder().decode(payload))
           if (data.type === 'state_update') {
-            setCurrentState(data.state)
+            if (data.state) {
+              setCurrentState(data.state)
+            }
+            if (data.slots) {
+              setCollectedSlots(data.slots)
+            }
           }
           if (data.type === 'message') {
             addMessage('agent', data.text, data.state)
