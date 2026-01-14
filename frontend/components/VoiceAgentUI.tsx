@@ -302,6 +302,45 @@ export default function VoiceAgentUI() {
         console.error('Failed to dispatch agent:', error)
         addMessage('agent', 'Failed to dispatch agent. Agent may need to be configured in dashboard.')
       }
+      */
+      
+      // Agent should auto-join now (no dispatch needed)
+      // Monitor for agent joining automatically
+      let agentDetectedAuto = false
+      const checkForAgentAuto = setInterval(() => {
+        const currentParticipants = Array.from(newRoom.remoteParticipants.keys())
+        const newParticipants = currentParticipants.filter(
+          id => !initialParticipantIds.has(id)
+        )
+        
+        if (newParticipants.length > 0 && !agentDetectedAuto) {
+          newParticipants.forEach(participantId => {
+            const participant = newRoom.remoteParticipants.get(participantId)
+            if (participant) {
+              // Agent joins with identity like "agent-{job_id}" or just "agent"
+              const isAgent = 
+                participant.identity === 'agent' ||
+                participant.identity?.startsWith('agent-') ||
+                participant.name?.toLowerCase().includes('agent')
+              
+              if (isAgent || newParticipants.length === 1) {
+                agentDetectedAuto = true
+                clearInterval(checkForAgentAuto)
+                addMessage('agent', `Agent joined the room automatically (${participant.identity})`, 'greeting')
+                setCurrentState('greeting')
+              }
+            }
+          })
+        }
+      }, 1000)
+      
+      // Stop checking after 30 seconds
+      setTimeout(() => {
+        clearInterval(checkForAgentAuto)
+        if (!agentDetectedAuto) {
+          addMessage('agent', 'Still waiting for agent to join. Check agent logs.')
+        }
+      }, 30000)
       
       setCurrentState(null)
     } catch (error) {
