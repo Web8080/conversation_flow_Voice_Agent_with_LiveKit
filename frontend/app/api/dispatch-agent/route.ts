@@ -143,22 +143,38 @@ export async function POST(request: NextRequest) {
       }
       
       console.log('[DISPATCH] Parsed result:', result)
-      
+
       // #region debug log
-      fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dispatch-agent/route.ts:85',message:'Dispatch result parsed',data:{result,contentType},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dispatch-agent/route.ts:85',message:'Dispatch result parsed',data:{result,contentType,responseText},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
       // #endregion
       
       console.log('Agent dispatched successfully:', result)
 
-      // #region debug log
-      fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dispatch-agent/route.ts:120',message:'Dispatch successful, returning response',data:{result,success:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-
-      return NextResponse.json({ 
+      // Return detailed response including what LiveKit returned
+      const responseData = { 
         success: true,
         message: 'Agent dispatched successfully',
-        dispatch_id: result.id || result.dispatch_id || result.dispatchId
-      })
+        dispatch_id: result.id || result.dispatch_id || result.dispatchId,
+        livekit_response: {
+          status: response.status,
+          body: responseText,
+          contentType,
+          parsed: result,
+        },
+        dispatch_request: {
+          url: dispatchUrl,
+          body: dispatchBody,
+          agentName,
+        }
+      }
+      
+      console.log('[DISPATCH] Returning response to frontend:', responseData)
+
+      // #region debug log
+      fetch('http://127.0.0.1:7244/ingest/8572ea72-42e9-4de6-ae58-e541b30671a6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dispatch-agent/route.ts:120',message:'Dispatch successful, returning response',data:responseData,timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+
+      return NextResponse.json(responseData)
     } catch (error: any) {
       console.error('Agent dispatch error:', error)
       return NextResponse.json({ 
