@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
-import { RoomServiceClient, AgentServiceClient } from 'livekit-server-sdk'
 
 export async function POST(request: NextRequest) {
   try {
