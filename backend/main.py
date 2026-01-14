@@ -106,7 +106,11 @@ class Stage1VoiceAgent:
                         frame_count += 1
                         # #region debug log
                         if frame_count % 100 == 0:  # Log every 100 frames to avoid spam
-                            logger.info("DEBUG: Processing audio frame", frame_count=frame_count, hypothesis="F")
+                            logger.info("DEBUG: Processing audio frame", 
+                                       frame_count=frame_count, 
+                                       frame_type=type(audio_frame).__name__,
+                                       is_audio_frame=isinstance(audio_frame, rtc.AudioFrame),
+                                       hypothesis="F")
                         # #endregion
                         
                         if isinstance(audio_frame, rtc.AudioFrame):
@@ -114,10 +118,12 @@ class Stage1VoiceAgent:
                                 self.audio_buffer.append(audio_frame)
                                 current_time = asyncio.get_event_loop().time()
                                 
-                                if frame_count % 50 == 0:  # Log every 50 frames for timing
-                                    logger.info("DEBUG: Audio frame received", 
+                                # Log every 100 frames to confirm we're processing AudioFrames
+                                if frame_count % 100 == 0:
+                                    logger.info("DEBUG: Processing AudioFrame", 
+                                               frame_count=frame_count,
                                                buffer_size=len(self.audio_buffer),
-                                               frame_samples=audio_frame.samples_per_channel if hasattr(audio_frame, 'samples_per_channel') else None,
+                                               frame_type=type(audio_frame).__name__,
                                                hypothesis="H2")
                                 
                                 if self.last_audio_time is None:
@@ -126,8 +132,12 @@ class Stage1VoiceAgent:
                                 
                                 # Process buffer every buffer_duration seconds
                                 time_diff = current_time - self.last_audio_time
-                                if frame_count % 50 == 0:  # Log every 50 frames for timing
+                                
+                                # Log timing info every 100 frames to see what's happening
+                                if frame_count % 100 == 0:
                                     logger.info("DEBUG: Time check", 
+                                               frame_count=frame_count,
+                                               buffer_size=len(self.audio_buffer),
                                                current_time=current_time,
                                                last_audio_time=self.last_audio_time,
                                                time_diff=time_diff,
