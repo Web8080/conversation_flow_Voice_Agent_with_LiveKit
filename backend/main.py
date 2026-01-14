@@ -82,11 +82,7 @@ class Stage1VoiceAgent:
         try:
             # For RemoteAudioTrack, we need to use AudioStream wrapper
             if isinstance(track, rtc.RemoteAudioTrack):
-                # #region debug log
-                logger.info("DEBUG: Creating AudioStream", track_type=type(track).__name__, hypothesis="F")
-                with open('/Users/user/Fortell_AI_Product/.cursor/debug.log', 'a') as f:
-                    f.write(json.dumps({"location":"main.py:85","message":"Creating AudioStream","data":{"track_type":type(track).__name__},"timestamp":asyncio.get_event_loop().time(),"sessionId":"debug-session","runId":"run1","hypothesisId":"H1"}) + "\n")
-                # #endregion
+                logger.info("DEBUG: Creating AudioStream", track_type=type(track).__name__, hypothesis="H1")
                 
                 try:
                     # Create AudioStream from RemoteAudioTrack
