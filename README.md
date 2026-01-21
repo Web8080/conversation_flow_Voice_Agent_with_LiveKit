@@ -199,12 +199,59 @@ See `docs/SETUP_AND_RUN.md` for detailed deployment instructions.
 
 ## Next Steps
 
-1. **Configure Services**: Read `services/SERVICES_SETUP.md`
-2. **Set Environment Variables**: Configure `.env` files
-3. **Run Security Scan**: Execute security scripts
-4. **Test Locally**: Use `./launch.sh`
-5. **Review Design**: Check `uiux/` for UI/UX
-6. **Review Design**: Check `docs/VOICE_AGENT_DESIGN.md`
+### Immediate improvements
+
+- **Test Stage 2 end-to-end**
+- **Deploy Stage 2 agent**
+- **Test the full appointment flow**
+- **Verify Google Calendar integration**
+- **Fix any bugs found**
+
+### Performance optimization
+
+- **Reduce latency** (optimize buffer sizes, parallel processing)
+- **Add caching for common responses**
+- **Optimize audio processing pipeline**
+
+### Error handling
+
+- **Better error messages for users**
+- **Retry logic for failed API calls**
+- **Graceful degradation when services are down**
+
+### Feature enhancements
+
+- **Multi-language support**
+  - Detect user language
+  - Configure STT/LLM/TTS for multiple languages
+  - Localize UI and prompts
+- **User authentication**
+  - Add login/signup
+  - Personalize conversations
+  - Store user preferences and history
+- **Email/SMS notifications**
+  - Send appointment confirmations
+  - Reminders before appointments
+  - Follow-up messages
+- **Analytics dashboard**
+  - Track conversation success rates
+  - Monitor agent performance
+  - Identify drop-off points
+
+### Production readiness
+
+- **Testing suite**
+  - Unit tests for state machine
+  - Integration tests for API calls
+  - E2E tests for full conversation flow
+- **Monitoring and alerting**
+  - Set up error tracking (Sentry, etc.)
+  - Performance monitoring
+  - Alert on critical failures
+- **Documentation**
+  - API documentation
+  - Deployment runbooks
+  - Troubleshooting guides
 
 ## Contributing
 
