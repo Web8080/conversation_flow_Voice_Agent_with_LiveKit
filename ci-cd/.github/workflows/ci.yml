@@ -217,3 +217,4 @@ jobs:
           push: true
           tags: your-registry/voice-agent-frontend:latest,your-registry/voice-agent-frontend:${{ github.sha }}
 
+

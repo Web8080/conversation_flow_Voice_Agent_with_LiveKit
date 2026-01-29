@@ -12,3 +12,4 @@ ENV PYTHONPATH=/app
 
 CMD ["python", "main.py", "dev"]
 
+

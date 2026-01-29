@@ -225,3 +225,4 @@ _global_collector = MetricsCollector()
 def get_metrics_collector() -> MetricsCollector:
     return _global_collector
 
+

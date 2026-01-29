@@ -91,3 +91,4 @@ On mobile (< 768px):
 - **Screen Reader Support**: ARIA labels on all controls
 - **Focus Indicators**: Clear focus states
 - **Color Contrast**: WCAG AA compliant (4.5:1 ratio)
+

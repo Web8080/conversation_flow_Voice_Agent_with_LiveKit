@@ -166,3 +166,4 @@ CREATE TRIGGER update_appointments_updated_at BEFORE UPDATE ON appointments
 -- Convert to hypertable if TimescaleDB is available
 -- SELECT create_hypertable('system_metrics', 'time', if_not_exists => TRUE);
 
+

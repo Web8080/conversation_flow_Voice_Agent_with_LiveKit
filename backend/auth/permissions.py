@@ -138,3 +138,4 @@ class PermissionChecker:
 # Singleton instance
 permission_checker = PermissionChecker()
 
+

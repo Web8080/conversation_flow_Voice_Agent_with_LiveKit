@@ -115,3 +115,4 @@ Terminal state can restart if user says "restart", "start over", or "new appoint
 
 **Stuck in fallback**: Check LLM responses and slot extraction logic.
 
+

@@ -178,3 +178,4 @@ The system is optimized for Google services:
 
 Just ensure your Google credentials are properly configured and the system will work perfectly!
 
+

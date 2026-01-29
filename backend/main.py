@@ -512,8 +512,13 @@ async def entrypoint(ctx: JobContext):
                 hypothesis="D")
     # #endregion
     
-    # Route to Stage 2 if configured, otherwise use Stage 1
-    if settings.agent_stage == "stage2":
+    # Route to appropriate stage based on configuration
+    if settings.agent_stage == "stage3":
+        logger.info("Routing to Stage 3 agent (JSON flows + VAD)", room=ctx.room.name)
+        from main_stage3 import entrypoint as stage3_entrypoint
+        await stage3_entrypoint(ctx)
+        return
+    elif settings.agent_stage == "stage2":
         logger.info("Routing to Stage 2 agent", room=ctx.room.name)
         from main_stage2 import entrypoint as stage2_entrypoint
         await stage2_entrypoint(ctx)

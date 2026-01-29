@@ -1,0 +1,371 @@
+{
+  "id": "appointment-booking-v1",
+  "name": "Appointment Booking Flow",
+  "version": "1.0.0",
+  "description": "A conversational flow for scheduling appointments with calendar integration",
+  
+  "global_settings": {
+    "system_prompt": "You are a friendly appointment scheduling assistant. Help users book appointments efficiently. Keep responses concise and suitable for voice interaction. Be conversational but focused on completing the booking.",
+    "llm_model": "gemini-1.5-flash",
+    "temperature": 0.7,
+    "max_tokens": 300,
+    "voice": "default",
+    "language": "en",
+    "max_retries": 3,
+    "fallback_node_id": "fallback",
+    "vad_enabled": true,
+    "silence_threshold_ms": 600,
+    "min_speech_duration_ms": 300,
+    "allow_interruptions": true,
+    "initial_variables": {
+      "business_name": "Our Office",
+      "default_duration_minutes": 30
+    }
+  },
+  
+  "start_node_id": "greeting",
+  
+  "nodes": [
+    {
+      "id": "greeting",
+      "type": "conversation",
+      "name": "Greeting",
+      "description": "Initial greeting and collect user's name",
+      "instruction": "Greet the user warmly and ask for their name. You are scheduling appointments for {{business_name}}.",
+      "response_template": "Hello! Welcome to {{business_name}}. I can help you schedule an appointment. May I have your name, please?",
+      "extract_variables": ["name"],
+      "auto_respond": true,
+      "edges": [
+        {
+          "id": "greeting-to-date",
+          "target_node_id": "collect_date",
+          "conditions": [
+            {
+              "type": "prompt",
+              "condition": "User provided their name",
+              "description": "User said their name"
+            }
+          ],
+          "priority": 1
+        },
+        {
+          "id": "greeting-to-fallback",
+          "target_node_id": "fallback",
+          "is_default": true,
+          "priority": 99
+        }
+      ],
+      "examples": [
+        {
+          "user": "Hi, I'm John Smith",
+          "agent": "Nice to meet you, John! When would you like to schedule your appointment?"
+        },
+        {
+          "user": "My name is Sarah",
+          "agent": "Great to meet you, Sarah! What date works best for your appointment?"
+        }
+      ]
+    },
+    
+    {
+      "id": "collect_date",
+      "type": "conversation",
+      "name": "Collect Date",
+      "description": "Ask for and collect the appointment date",
+      "instruction": "Ask the user for their preferred appointment date. Accept dates like 'tomorrow', 'next Monday', 'January 15th', etc. Extract the date in YYYY-MM-DD format.",
+      "response_template": "Nice to meet you, {{name}}! When would you like to schedule your appointment?",
+      "extract_variables": ["date"],
+      "auto_respond": true,
+      "edges": [
+        {
+          "id": "date-to-time",
+          "target_node_id": "collect_time",
+          "conditions": [
+            {
+              "type": "equation",
+              "condition": "{{date}} exists",
+              "description": "Date was extracted"
+            }
+          ],
+          "priority": 1
+        },
+        {
+          "id": "date-to-self",
+          "target_node_id": "collect_date",
+          "conditions": [
+            {
+              "type": "prompt",
+              "condition": "User asked a question or gave unclear date",
+              "description": "Date not clear, ask again"
+            }
+          ],
+          "priority": 2
+        },
+        {
+          "id": "date-to-fallback",
+          "target_node_id": "fallback",
+          "is_default": true,
+          "priority": 99
+        }
+      ],
+      "examples": [
+        {
+          "user": "How about next Tuesday?",
+          "agent": "Next Tuesday sounds good! What time would you prefer?"
+        },
+        {
+          "user": "January 20th",
+          "agent": "January 20th, perfect! What time works best for you?"
+        }
+      ]
+    },
+    
+    {
+      "id": "collect_time",
+      "type": "conversation",
+      "name": "Collect Time",
+      "description": "Ask for and collect the appointment time",
+      "instruction": "Ask the user for their preferred appointment time. Accept times like '2 PM', '14:00', 'morning', 'afternoon'. Extract the time in HH:MM format (24-hour).",
+      "response_template": "Great, {{date}} works! What time would you prefer?",
+      "extract_variables": ["time"],
+      "auto_respond": true,
+      "edges": [
+        {
+          "id": "time-to-confirm",
+          "target_node_id": "confirmation",
+          "conditions": [
+            {
+              "type": "equation",
+              "condition": "{{time}} exists",
+              "description": "Time was extracted"
+            }
+          ],
+          "priority": 1
+        },
+        {
+          "id": "time-to-self",
+          "target_node_id": "collect_time",
+          "conditions": [
+            {
+              "type": "prompt",
+              "condition": "User asked about availability or gave unclear time",
+              "description": "Time not clear, ask again"
+            }
+          ],
+          "priority": 2
+        },
+        {
+          "id": "time-to-fallback",
+          "target_node_id": "fallback",
+          "is_default": true,
+          "priority": 99
+        }
+      ],
+      "examples": [
+        {
+          "user": "2 in the afternoon",
+          "agent": "2 PM works great! Let me confirm the details with you."
+        },
+        {
+          "user": "Around 10 AM",
+          "agent": "10 AM, excellent! Let me verify the appointment details."
+        }
+      ]
+    },
+    
+    {
+      "id": "confirmation",
+      "type": "conversation",
+      "name": "Confirmation",
+      "description": "Confirm appointment details with user",
+      "instruction": "Summarize the appointment details and ask for confirmation. Include the name, date, and time.",
+      "response_template": "Perfect! Just to confirm: {{name}}, you want to schedule an appointment on {{date}} at {{time}}. Is that correct?",
+      "extract_variables": ["confirmed"],
+      "auto_respond": true,
+      "edges": [
+        {
+          "id": "confirm-to-book",
+          "target_node_id": "book_appointment",
+          "conditions": [
+            {
+              "type": "prompt",
+              "condition": "User confirmed or said yes",
+              "description": "User confirmed the appointment"
+            }
+          ],
+          "priority": 1
+        },
+        {
+          "id": "confirm-to-date",
+          "target_node_id": "collect_date",
+          "conditions": [
+            {
+              "type": "prompt",
+              "condition": "User said no or wants to change the date or time",
+              "description": "User wants to change details"
+            }
+          ],
+          "priority": 2
+        },
+        {
+          "id": "confirm-to-self",
+          "target_node_id": "confirmation",
+          "conditions": [
+            {
+              "type": "prompt",
+              "condition": "User asked a question or is unsure",
+              "description": "User has questions"
+            }
+          ],
+          "priority": 3
+        },
+        {
+          "id": "confirm-to-fallback",
+          "target_node_id": "fallback",
+          "is_default": true,
+          "priority": 99
+        }
+      ]
+    },
+    
+    {
+      "id": "book_appointment",
+      "type": "function",
+      "name": "Book Appointment",
+      "description": "Actually book the appointment in the calendar",
+      "function_name": "create_calendar_event",
+      "parameters": {
+        "name": "{{name}}",
+        "date": "{{date}}",
+        "time": "{{time}}",
+        "duration_minutes": "{{default_duration_minutes}}"
+      },
+      "result_variable": "booking_result",
+      "pending_message": "Let me book that for you...",
+      "success_message": "Your appointment has been booked! You're all set for {{date}} at {{time}}.",
+      "failure_message": "I'm sorry, there was a problem booking your appointment. Let me connect you with someone who can help.",
+      "edges": [
+        {
+          "id": "book-to-end",
+          "target_node_id": "end_success",
+          "conditions": [
+            {
+              "type": "equation",
+              "condition": "{{booking_result}} exists",
+              "description": "Booking was successful"
+            }
+          ],
+          "priority": 1
+        },
+        {
+          "id": "book-to-transfer",
+          "target_node_id": "transfer",
+          "is_default": true,
+          "priority": 99
+        }
+      ]
+    },
+    
+    {
+      "id": "end_success",
+      "type": "end",
+      "name": "Success End",
+      "description": "Successfully completed the booking",
+      "message": "Thank you for booking with {{business_name}}! We look forward to seeing you. Have a great day!",
+      "end_reason": "booking_completed",
+      "edges": []
+    },
+    
+    {
+      "id": "fallback",
+      "type": "conversation",
+      "name": "Fallback",
+      "description": "Handle unclear input or errors",
+      "instruction": "The user said something unclear. Politely ask them to repeat or clarify. If this is the third attempt, offer to transfer to a human.",
+      "response_template": "I'm sorry, I didn't quite catch that. Could you please repeat what you said?",
+      "auto_respond": true,
+      "edges": [
+        {
+          "id": "fallback-to-greeting",
+          "target_node_id": "greeting",
+          "conditions": [
+            {
+              "type": "prompt",
+              "condition": "User wants to start over or said something about their name",
+              "description": "Restart flow"
+            }
+          ],
+          "priority": 1
+        },
+        {
+          "id": "fallback-to-transfer",
+          "target_node_id": "transfer",
+          "conditions": [
+            {
+              "type": "prompt",
+              "condition": "User wants to speak to a human or agent",
+              "description": "Transfer to human"
+            }
+          ],
+          "priority": 2
+        },
+        {
+          "id": "fallback-to-date",
+          "target_node_id": "collect_date",
+          "conditions": [
+            {
+              "type": "equation",
+              "condition": "{{name}} exists AND {{date}} not exists",
+              "description": "Have name but not date"
+            }
+          ],
+          "priority": 3
+        },
+        {
+          "id": "fallback-to-time",
+          "target_node_id": "collect_time",
+          "conditions": [
+            {
+              "type": "equation",
+              "condition": "{{name}} exists AND {{date}} exists AND {{time}} not exists",
+              "description": "Have name and date but not time"
+            }
+          ],
+          "priority": 4
+        },
+        {
+          "id": "fallback-to-confirm",
+          "target_node_id": "confirmation",
+          "conditions": [
+            {
+              "type": "equation",
+              "condition": "{{name}} exists AND {{date}} exists AND {{time}} exists",
+              "description": "Have all info, go to confirm"
+            }
+          ],
+          "priority": 5
+        },
+        {
+          "id": "fallback-to-greeting-default",
+          "target_node_id": "greeting",
+          "is_default": true,
+          "priority": 99
+        }
+      ]
+    },
+    
+    {
+      "id": "transfer",
+      "type": "transfer",
+      "name": "Transfer to Human",
+      "description": "Transfer the call to a human agent",
+      "message": "Let me connect you with one of our team members who can assist you further. Please hold.",
+      "destination": "support_queue",
+      "transfer_reason": "user_request_or_fallback",
+      "edges": []
+    }
+  ],
+  
+  "created_at": "2026-01-29T00:00:00Z",
+  "updated_at": "2026-01-29T00:00:00Z"
+}

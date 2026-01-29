@@ -46,3 +46,4 @@ find "$BACKUP_DIR" -name "backup_*.sql.gz" -mtime +$RETENTION_DAYS -delete
 
 echo "✅ Backup process completed"
 
+

@@ -165,3 +165,4 @@ def get_cost_tracker(daily_budget: Optional[float] = None, monthly_budget: Optio
         _global_cost_tracker = CostTracker(daily_budget=daily_budget, monthly_budget=monthly_budget)
     return _global_cost_tracker
 
+

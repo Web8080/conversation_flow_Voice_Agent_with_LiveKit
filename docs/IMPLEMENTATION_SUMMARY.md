@@ -103,3 +103,4 @@ AGENT_STAGE=stage2
 - Calendar integration requires Google Calendar API setup
 - Frontend state progress may need refresh on page reload
 
+

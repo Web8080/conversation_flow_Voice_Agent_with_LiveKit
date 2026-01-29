@@ -87,3 +87,4 @@ See `docs/GOOGLE_CALENDAR_SETUP.md` for detailed instructions.
 4. Test appointment booking flow
 5. Verify state progress updates in frontend
 
+

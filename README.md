@@ -87,6 +87,12 @@ This project demonstrates a complete end-to-end voice agent implementation combi
 
 ### Data Flow Architecture
 
+**Stage 1/2 (Legacy - Fixed Buffer):**
+```
+User Speech → [Microphone] → [LiveKit] → [Audio Buffer 1.5s] → [STT] → [State Machine] → [LLM] → [TTS] → [LiveKit] → [Speakers]
+```
+
+**Stage 3 (New - VAD-based):**
 ```
 User Speech
     │
@@ -97,19 +103,20 @@ User Speech
 [LiveKit WebRTC] ──────────► [Python Agent]
     │                              │
     │                              ▼
-    │                    [Audio Buffer (1.5s)]
+    │                    [VAD Processor]  ◄── NEW: Detects speech boundaries
+    │                    • Speech detection
+    │                    • End-of-speech detection
+    │                    • Barge-in support
     │                              │
-    │                              ▼
+    │                              ▼ (only when speech complete)
     │                    [STT Service]
     │                              │
     │                              ▼
-    │                    [Transcribed Text]
-    │                              │
-    │                              ▼
-    │                    [State Machine]
-    │                    • Extract Slots
-    │                    • Determine State
-    │                    • Generate Prompt
+    │                    [Flow Engine]  ◄── NEW: JSON-driven
+    │                    • Load JSON flow
+    │                    • Execute nodes
+    │                    • Evaluate transitions
+    │                    • Extract variables
     │                              │
     │                              ▼
     │                    [LLM Service]
@@ -239,6 +246,150 @@ See `docs/QUICKSTART.md` for detailed instructions.
 - [x] **Monitoring**: Structured logging, metrics, distributed tracing
 - [x] **DevSecOps**: Security-first approach with automated checks
 
+---
+
+## 🆕 New Implementation: Stage 3 - JSON-Driven Flow Engine with VAD
+
+### Overview
+
+Stage 3 introduces a **Retell AI-style** conversational flow system with intelligent speech detection:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Stage 3 Architecture                     │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  User Audio → [VAD] → [STT] → [Flow Engine] → [TTS] → Audio │
+│                                    │                        │
+│                         ┌──────────┴──────────┐             │
+│                         │   JSON Flow File    │             │
+│                         │  • Nodes            │             │
+│                         │  • Edges            │             │
+│                         │  • Transitions      │             │
+│                         │  • Variables        │             │
+│                         └─────────────────────┘             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Key Improvements
+
+| Problem | Before (Stage 1/2) | After (Stage 3) |
+|---------|-------------------|-----------------|
+| **Bot responds too fast** | Fixed 1.5s audio buffer | VAD detects actual speech boundaries |
+| **Hardcoded flows** | Python code changes required | JSON config - edit & restart |
+| **Limited transitions** | Basic state machine | Equation + LLM-evaluated conditions |
+| **Variable handling** | Simple slot dict | Dynamic variable store with interpolation |
+
+### 1. Voice Activity Detection (VAD)
+
+Fixes the "bot responds too fast" problem:
+
+```python
+# Before: Process every 1.5 seconds regardless of user speech
+self.buffer_duration = 1.5  # Fixed timing
+
+# After: Wait for actual speech boundaries
+VAD_CONFIG = {
+    "silence_threshold_ms": 600,    # Wait 600ms silence before responding
+    "min_speech_duration_ms": 250,  # Ignore very short sounds
+    "allow_interruptions": True     # User can interrupt agent
+}
+```
+
+### 2. JSON-Driven Conversation Flows
+
+Define flows in JSON without code changes:
+
+```json
+{
+  "id": "appointment-booking",
+  "start_node_id": "greeting",
+  "nodes": [
+    {
+      "id": "greeting",
+      "type": "conversation",
+      "instruction": "Greet the user and ask for their name",
+      "extract_variables": ["name"],
+      "edges": [
+        {
+          "target_node_id": "collect_date",
+          "conditions": [
+            { "type": "prompt", "condition": "User provided their name" }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 3. Node Types
+
+| Node Type | Purpose |
+|-----------|---------|
+| `conversation` | Dialogue with user, variable extraction |
+| `function` | Execute registered functions (calendar, APIs) |
+| `logic_split` | Conditional branching based on variables |
+| `end` | Terminate conversation |
+| `transfer` | Handoff to human agent |
+
+### 4. Transition Conditions
+
+**Equation-based** (fast, no LLM call):
+```json
+{ "type": "equation", "condition": "{{name}} exists AND {{date}} exists" }
+```
+
+**Prompt-based** (intelligent, LLM evaluates):
+```json
+{ "type": "prompt", "condition": "User confirmed the appointment" }
+```
+
+### Quick Start
+
+1. **Enable Stage 3** in `.env`:
+   ```bash
+   AGENT_STAGE=stage3
+   ```
+
+2. **Run the agent**:
+   ```bash
+   cd backend
+   python main.py dev
+   ```
+
+3. **Customize** by editing `backend/flows/appointment_booking.json`
+
+### New Files
+
+```
+backend/
+├── agent/flow_engine/
+│   ├── schema.py            # JSON schema definitions
+│   ├── engine.py            # Flow orchestrator
+│   ├── nodes.py             # Node execution
+│   ├── dynamic_variables.py # Variable interpolation
+│   └── vad_processor.py     # Voice Activity Detection
+├── flows/
+│   └── appointment_booking.json  # Sample flow
+└── main_stage3.py           # Stage 3 entry point
+```
+
+### Configuration
+
+```bash
+# .env settings
+AGENT_STAGE=stage3              # Enable Stage 3
+VAD_ENABLED=true                # Enable VAD
+VAD_SILENCE_THRESHOLD_MS=600    # Silence to detect end of speech
+VAD_MIN_SPEECH_DURATION_MS=250  # Minimum speech to process
+ALLOW_INTERRUPTIONS=true        # Let user interrupt agent
+```
+
+**Full documentation**: See [`docs/STAGE3_FLOW_ENGINE.md`](docs/STAGE3_FLOW_ENGINE.md)
+
+---
+
 ## Documentation
 
 ### Getting Started
@@ -254,6 +405,7 @@ See `docs/QUICKSTART.md` for detailed instructions.
 - **[database/SCHEMA_DESIGN.md](database/SCHEMA_DESIGN.md)** - Database schema
 - **[monitoring/LOGGING_STRATEGY.md](monitoring/LOGGING_STRATEGY.md)** - Observability
 - **[security/scripts/](security/scripts/)** - Security scanning tools
+- **[STAGE3_FLOW_ENGINE.md](docs/STAGE3_FLOW_ENGINE.md)** - Stage 3 JSON flow engine & VAD 🆕
 
 
 ## Tech Stack
@@ -343,7 +495,9 @@ See `docs/SETUP_AND_RUN.md` for detailed deployment instructions.
 ### Core Implementation 
 - [x] Backend implementation complete
 - [x] Frontend implementation complete
-- [x] State machine implementation complete
+- [x] State machine implementation complete (Stage 1/2)
+- [x] **JSON Flow Engine implementation complete (Stage 3)** 🆕
+- [x] **Voice Activity Detection (VAD) implemented** 🆕
 - [x] Authentication system implemented
 
 ### Design & Documentation 
@@ -375,15 +529,18 @@ See `docs/SETUP_AND_RUN.md` for detailed deployment instructions.
 
 ### Immediate improvements
 
-- **Test the full appointment flow**
+- **Test Stage 3 end-to-end** (JSON flows + VAD)
+- **Deploy Stage 3 agent** with `AGENT_STAGE=stage3`
+- **Fine-tune VAD thresholds** for your environment
+- **Customize conversation flow** in `flows/appointment_booking.json`
 - **Verify Google Calendar integration**
-- **Fix any bugs found**
 
 ### Performance optimization
 
-- **Reduce latency** (optimize buffer sizes, parallel processing)
+- **Tune VAD parameters** (silence threshold, min speech duration)
 - **Add caching for common responses**
 - **Optimize audio processing pipeline**
+- **Parallelize STT/LLM calls where possible**
 
 ### Error handling
 

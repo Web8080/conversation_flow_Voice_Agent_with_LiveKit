@@ -139,3 +139,4 @@ class CalendarService:
         """Check if calendar service is enabled"""
         return self.enabled
 
+

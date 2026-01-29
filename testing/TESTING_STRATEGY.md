@@ -179,3 +179,4 @@ npm run test:e2e
 
 # Run performance tests
 locust -f testing/performance/load_test.py
+

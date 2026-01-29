@@ -91,3 +91,4 @@ trap "echo ''; echo 'Stopping services...'; kill $BACKEND_PID $FRONTEND_PID $OLL
 
 wait
 
+
