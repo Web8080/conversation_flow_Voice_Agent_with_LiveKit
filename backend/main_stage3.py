@@ -56,6 +56,9 @@ class Stage3VoiceAgent:
         # State for handling agent speech (for barge-in)
         self._is_speaking = False
         self._current_speech_task = None
+        # Prevent multiple overlapping responses: one utterance at a time + debounce
+        self._utterance_lock = asyncio.Lock()
+        self._last_utterance_finish_time = 0.0  # time when we finished processing last utterance
         
     async def initialize(self):
         """Initialize all services, flow engine, and VAD"""
@@ -89,11 +92,11 @@ class Stage3VoiceAgent:
                 logger.warning("Flow file not found, using default flow", path=str(flow_path))
                 await self._load_default_flow()
             
-            # Initialize VAD
+            # Initialize VAD (use settings so cloud can override via env)
             vad_config = VADConfig(
-                threshold=0.5,
-                min_speech_duration_ms=250,
-                silence_threshold_ms=600,
+                threshold=getattr(settings, "vad_threshold", 0.5),
+                min_speech_duration_ms=getattr(settings, "vad_min_speech_duration_ms", 250),
+                silence_threshold_ms=getattr(settings, "vad_silence_threshold_ms", 1800),
                 sample_rate=24000,
                 energy_filter_enabled=True
             )
@@ -146,7 +149,7 @@ class Stage3VoiceAgent:
             "global_settings": {
                 "system_prompt": "You are a helpful voice assistant for scheduling appointments.",
                 "vad_enabled": True,
-                "silence_threshold_ms": 600
+                "silence_threshold_ms": getattr(settings, "vad_silence_threshold_ms", 1800)
             },
             "start_node_id": "greeting",
             "nodes": [
@@ -285,8 +288,23 @@ class Stage3VoiceAgent:
         
         # Process through VAD
         vad_result = await self.vad_processor.process_frame(audio_frame)
-        
+        # #region agent log
+        if vad_result.is_speech_complete:
+            try:
+                import json
+                with open("/Users/user/Fortell_AI_Product/.cursor/debug.log", "a") as _f:
+                    _f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"H2,H3,H5","location":"main_stage3.py:VAD_speech_complete","message":"VAD returned speech_complete","data":{"audio_data_len":len(vad_result.audio_data) if vad_result.audio_data else 0,"state":str(getattr(vad_result.state,"name",vad_result.state))},"timestamp":__import__("time").time()*1000}) + "\n")
+            except Exception:
+                pass
+        # #endregion
         if vad_result.is_speech_complete and vad_result.audio_data:
+            # Debounce: ignore if we finished an utterance very recently (avoid double responses)
+            import time
+            if time.monotonic() - self._last_utterance_finish_time < 2.0:
+                return
+            # Only one utterance at a time (skip if still processing previous)
+            if self._utterance_lock.locked():
+                return
             # Speech complete - process the utterance
             await self._process_complete_utterance(
                 vad_result.audio_data,
@@ -322,48 +340,59 @@ class Stage3VoiceAgent:
         sample_rate: int,
         num_channels: int
     ):
-        """Process a complete speech utterance"""
-        try:
-            logger.info("Processing complete utterance",
-                       audio_size=len(audio_data),
-                       sample_rate=sample_rate)
-            
-            # Step 1: Speech-to-Text
-            user_text = await self.stt_service.transcribe(
-                audio_data, sample_rate, num_channels
-            )
-            
-            if not user_text or len(user_text.strip()) < 2:
-                logger.debug("STT returned empty or short text, ignoring")
-                return
-            
-            logger.info("User said", text=user_text[:100])
-            
-            # Send user transcription to frontend
-            await self._send_transcription("user", user_text)
-            
-            # Step 2: Process through flow engine
-            result = await self.flow_engine.process_input(
-                self.session_state,
-                user_text
-            )
-            
-            # Step 3: Handle response
-            if result.response_text:
-                await self._send_transcription("agent", result.response_text)
-                await self.say(result.response_text)
-            
-            # Update state in frontend
-            await self._send_state_update()
-            
-            # Check if conversation ended
-            if self.session_state.is_complete:
-                logger.info("Conversation completed",
-                           reason=self.session_state.end_reason)
-            
-        except Exception as e:
-            logger.error("Error processing utterance", error=str(e))
-            await self.say("I'm sorry, I encountered an error. Could you please repeat that?")
+        """Process a complete speech utterance (one at a time, no overlap)."""
+        import time
+        async with self._utterance_lock:
+            # #region agent log
+            try:
+                import json
+                with open("/Users/user/Fortell_AI_Product/.cursor/debug.log", "a") as _f:
+                    _f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"H2,H3,H5","location":"main_stage3.py:_process_complete_utterance","message":"Processing complete utterance (bot will respond)","data":{"audio_len":len(audio_data)},"timestamp":__import__("time").time()*1000}) + "\n")
+            except Exception:
+                pass
+            # #endregion
+            try:
+                logger.info("Processing complete utterance",
+                           audio_size=len(audio_data),
+                           sample_rate=sample_rate)
+                
+                # Step 1: Speech-to-Text
+                user_text = await self.stt_service.transcribe(
+                    audio_data, sample_rate, num_channels
+                )
+                
+                if not user_text or len(user_text.strip()) < 2:
+                    logger.debug("STT returned empty or short text, ignoring")
+                    return
+                
+                logger.info("User said", text=user_text[:100])
+                
+                # Send user transcription to frontend
+                await self._send_transcription("user", user_text)
+                
+                # Step 2: Process through flow engine
+                result = await self.flow_engine.process_input(
+                    self.session_state,
+                    user_text
+                )
+                
+                # Step 3: Handle response
+                if result.response_text:
+                    await self._send_transcription("agent", result.response_text)
+                    await self.say(result.response_text)
+                
+                # Update state in frontend
+                await self._send_state_update()
+                
+                # Check if conversation ended
+                if self.session_state.is_complete:
+                    logger.info("Conversation completed",
+                               reason=self.session_state.end_reason)
+            except Exception as e:
+                logger.error("Error processing utterance", error=str(e))
+                await self.say("I'm sorry, I encountered an error. Could you please repeat that?")
+            finally:
+                self._last_utterance_finish_time = time.monotonic()
     
     async def _send_transcription(self, role: str, text: str):
         """Send transcription to frontend"""

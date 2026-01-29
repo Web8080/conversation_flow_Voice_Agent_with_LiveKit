@@ -10,6 +10,7 @@ Simple voice agent that:
 6. Plays audio back into room
 """
 import asyncio
+import json
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
@@ -513,7 +514,21 @@ async def entrypoint(ctx: JobContext):
     # #endregion
     
     # Route to appropriate stage based on configuration
+    # #region agent log
+    try:
+        with open("/Users/user/Fortell_AI_Product/.cursor/debug.log", "a") as _f:
+            _f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"H1","location":"main.py:route","message":"Stage routing","data":{"agent_stage":getattr(settings,"agent_stage",None)},"timestamp":__import__("time").time()*1000}) + "\n")
+    except Exception:
+        pass
+    # #endregion
     if settings.agent_stage == "stage3":
+        # #region agent log
+        try:
+            with open("/Users/user/Fortell_AI_Product/.cursor/debug.log", "a") as _f:
+                _f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"H1","location":"main.py:stage3","message":"Entered Stage 3","data":{"branch":"stage3"},"timestamp":__import__("time").time()*1000}) + "\n")
+        except Exception:
+            pass
+        # #endregion
         logger.info("Routing to Stage 3 agent (JSON flows + VAD)", room=ctx.room.name)
         from main_stage3 import entrypoint as stage3_entrypoint
         await stage3_entrypoint(ctx)

@@ -364,6 +364,14 @@ class VADProcessor:
             # Check if we have enough speech
             if self._speech_frames >= self._min_speech_frames:
                 is_speech_complete = True
+                # #region agent log
+                try:
+                    import json
+                    with open("/Users/user/Fortell_AI_Product/.cursor/debug.log", "a") as _f:
+                        _f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"H3,H5","location":"vad_processor.py:SPEECH_COMPLETE","message":"VAD marked speech complete","data":{"silence_frames":self._silence_frames,"speech_frames":self._speech_frames,"silence_frame_threshold":self._silence_frame_threshold,"silence_threshold_ms":self.config.silence_threshold_ms},"timestamp":__import__("time").time()*1000}) + "\n")
+                except Exception:
+                    pass
+                # #endregion
                 audio_data = self._buffer.get_speech_segment(self.config.sample_rate)
                 
                 if self._on_speech_end:
