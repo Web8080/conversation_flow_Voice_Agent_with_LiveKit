@@ -48,9 +48,9 @@ class Settings(BaseSettings):
     # VAD Configuration (Stage 3)
     vad_enabled: bool = True
     vad_threshold: float = 0.5  # Speech probability threshold (0.0-1.0)
-    vad_silence_threshold_ms: int = 2500  # Silence before "user done" (higher = fewer mid-sentence cuts)
+    vad_silence_threshold_ms: int = 1200  # Silence before "user done" (was 2500 - too long, agent never heard)
     vad_min_speech_duration_ms: int = 250  # Min speech frames to consider valid
-    vad_min_utterance_speech_ms: int = 1500  # Min speech duration to process (ignore "Hello", "Please" alone)
+    vad_min_utterance_speech_ms: int = 400  # Min speech to process (was 1500 - dropped short replies; 400ms = hear again)
     
     # Flow Configuration (Stage 3)
     flow_path: Optional[str] = None  # Path to flow JSON file
