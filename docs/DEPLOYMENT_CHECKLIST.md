@@ -1,5 +1,64 @@
 # Deployment Checklist
 
+## Redeploy on LiveKit Cloud (pick up code changes)
+
+Use this when you’ve changed code (e.g. Stage 3, schema, flows) and want the cloud agent to use it.
+
+### 1. Push your code
+
+```bash
+cd /Users/user/Fortell_AI_Product
+git add -A
+git commit -m "your message"
+git push origin master
+```
+
+### 2. Deploy the agent from your machine
+
+**Prereqs:** [LiveKit CLI](https://docs.livekit.io/reference/other/agent-cli/) installed and logged in:
+
+```bash
+lk cloud auth
+```
+
+**Deploy from the backend directory:**
+
+```bash
+cd /Users/user/Fortell_AI_Product/backend
+lk agent deploy
+```
+
+If your project name isn’t inferred from `livekit.toml`, pass it explicitly:
+
+```bash
+lk agent deploy --project voiceagent007
+# or
+lk agent deploy --project voiceagent008
+```
+
+(Use the project name that matches your [LiveKit Cloud](https://cloud.livekit.io) project.)
+
+### 3. Optional: push secrets (env vars)
+
+If you changed `.env` or need to sync secrets (API keys, `AGENT_STAGE`, etc.):
+
+```bash
+cd /Users/user/Fortell_AI_Product/backend
+lk agent update-secrets --secrets-file .env.secrets --project voiceagent007 --overwrite
+lk agent deploy --project voiceagent007
+```
+
+### 4. Check that it’s running
+
+```bash
+lk agent status --project voiceagent007
+lk agent logs --project voiceagent007
+```
+
+Then open your Vercel app, join a room, and confirm the agent joins and behaves as expected.
+
+---
+
 ## Stage 2 Deployment
 
 ### 1. Enable Stage 2

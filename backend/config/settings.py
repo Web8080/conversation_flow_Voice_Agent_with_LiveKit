@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     max_retry_attempts: int = 3
     conversation_timeout: int = 300
     audio_buffer_duration: float = 2.0  # seconds (legacy, used by stage1/stage2)
-    agent_stage: str = "stage2"  # stage1, stage2, or stage3 (stage2 = cloud default; set stage3 for local VAD testing)
+    agent_stage: str = "stage3"  # stage1, stage2, or stage3
     
     # LLM Configuration
     llm_temperature: float = 0.7

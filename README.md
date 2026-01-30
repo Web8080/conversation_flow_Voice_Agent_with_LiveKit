@@ -527,13 +527,6 @@ See `docs/SETUP_AND_RUN.md` for detailed deployment instructions.
 
 ## Next Steps
 
-### Immediate improvements
-
-- **Test Stage 3 end-to-end** (JSON flows + VAD)
-- **Deploy Stage 3 agent** with `AGENT_STAGE=stage3`
-- **Fine-tune VAD thresholds** for your environment
-- **Customize conversation flow** in `flows/appointment_booking.json`
-- **Verify Google Calendar integration**
 
 ### Performance optimization
 
@@ -592,5 +585,5 @@ This project is open source.
 
 ---
 
-**Built with** clarity, structure, and correctness in mind. 
+**Built by Victor ibhafidon with** clarity, structure, and correctness in mind. 
 **Designed for** production readiness and scalability.

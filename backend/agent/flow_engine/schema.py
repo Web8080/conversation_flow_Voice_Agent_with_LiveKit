@@ -54,7 +54,7 @@ class NodeBase:
     """Base class for all node types"""
     id: str
     type: NodeType
-    name: str
+    name: str = ""  # default so subclasses can override type with default
     description: Optional[str] = None
     edges: List[Edge] = field(default_factory=list)
     

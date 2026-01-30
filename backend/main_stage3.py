@@ -96,7 +96,7 @@ class Stage3VoiceAgent:
             vad_config = VADConfig(
                 threshold=getattr(settings, "vad_threshold", 0.5),
                 min_speech_duration_ms=getattr(settings, "vad_min_speech_duration_ms", 250),
-                silence_threshold_ms=getattr(settings, "vad_silence_threshold_ms", 1800),
+                silence_threshold_ms=getattr(settings, "vad_silence_threshold_ms", 2500),
                 sample_rate=24000,
                 energy_filter_enabled=True
             )
@@ -149,7 +149,7 @@ class Stage3VoiceAgent:
             "global_settings": {
                 "system_prompt": "You are a helpful voice assistant for scheduling appointments.",
                 "vad_enabled": True,
-                "silence_threshold_ms": getattr(settings, "vad_silence_threshold_ms", 1800)
+                "silence_threshold_ms": getattr(settings, "vad_silence_threshold_ms", 2500)
             },
             "start_node_id": "greeting",
             "nodes": [
@@ -298,9 +298,13 @@ class Stage3VoiceAgent:
                 pass
         # #endregion
         if vad_result.is_speech_complete and vad_result.audio_data:
-            # Debounce: ignore if we finished an utterance very recently (avoid double responses)
             import time
-            if time.monotonic() - self._last_utterance_finish_time < 2.0:
+            # Min utterance length: ignore short fragments ("Hello", "Please" alone)
+            min_speech_ms = getattr(settings, "vad_min_utterance_speech_ms", 1500)
+            if getattr(vad_result, "speech_duration_ms", 0) < min_speech_ms:
+                return
+            # Debounce: ignore if we finished an utterance very recently (avoid double responses)
+            if time.monotonic() - self._last_utterance_finish_time < 4.0:
                 return
             # Only one utterance at a time (skip if still processing previous)
             if self._utterance_lock.locked():
